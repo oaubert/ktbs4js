@@ -1,4 +1,6 @@
-/* Modelled Trace API */
+/*
+ * Modelled Trace API
+ */
 (function() {
      /* FIXME: Write proper representation functions (str, json, ...)
       */
@@ -29,9 +31,9 @@
          /*
           * Return a list of the obsels of this trace matching the parameters
           */
-         list_obsels: function(begin, end, reverse) {
+         list_obsels: function(_begin, _end, _reverse) {
              var res;
-             if (typeof begin !== 'undefined' || typeof end !== 'undefined') {
+             if (typeof _begin !== 'undefined' || typeof _end !== 'undefined') {
                  /*
                   * Not optimized yet.
                   */
@@ -39,13 +41,13 @@
                  var l = this.obsels.length;
                  for (var i = 0; i < l; i++) {
                      var o = this.obsels[i];
-                     if ((typeof begin !== 'undefined' && o.begin > begin) && (typeof end !== 'undefined' && o.end < end)) {
+                     if ((typeof _begin !== 'undefined' && o.begin > _begin) && (typeof _end !== 'undefined' && o.end < _end)) {
                          res.push(o);
                      }
                  }
              }
 
-             if (typeof reverse !== 'undefined') {
+             if (typeof _reverse !== 'undefined') {
                  if (res !== undefined) {
                      /* Should reverse the whole list. Make a copy. */
                      res = this.obsels.slice(0);
@@ -84,10 +86,10 @@
 
          /* (type:ObselType, begin:int, end:int?, subject:str?, attributes:[AttributeType=>any]?) */
          /* Create a new obsel and add it to the trace */
-         create_obsel: function(type, begin, end, subject, attributes) {
+         create_obsel: function(type, begin, end, subject, _attributes) {
              var o = new Obsel(type, begin, end, subject);
-             if (typeof attributes !== 'undefined') {
-                 o.attributes = attributes;
+             if (typeof _attributes !== 'undefined') {
+                 o.attributes = _attributes;
              }
              o.trace = this;
              this.obsels.push(o);
@@ -96,18 +98,21 @@
          /* Helper methods */
 
          /* Create a new obsel with the given attributes */
-         trace: function(type, attributes, begin, end, subject) {
+         trace: function(type, _attributes, _begin, _end, _subject) {
              var t = (new Date()).getTime();
              if (typeof begin === 'undefined') {
-                 begin = t;
+                 _begin = t;
              }
              if (typeof end === 'undefined') {
-                 end = begin;
+                 _end = _begin;
              }
              if (typeof subject === 'undefined') {
-                 subject = this.default_subject;
+                 _subject = this.default_subject;
              }
-             return this.create_obsel(type, begin, end, subject, attributes);
+             if (typeof _attributes === 'undefined') {
+                 _attributes = {};
+             }
+             return this.create_obsel(type, _begin, _end, _subject, _attributes);
          }
      };
 
@@ -243,11 +248,16 @@
          },
 
          /*
-          * Explicitly create and initialize a new trace "ldt"
+          * Explicitly create and initialize a new trace with the given name.
+          * The optional uri parameter allows to initialize the trace URI.
+          *
           * If another existed with the same name before, then it is replaced by a new one.
           */
-         init_trace: function(name) {
+         init_trace: function(name, _uri) {
              var t = new Trace();
+             if (typeof _uri !== 'undefined') {
+                 t.uri = _uri;
+             }
              this.traces[name] = t;
              return t;
          }
