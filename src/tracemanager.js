@@ -249,10 +249,14 @@
 
      var Obsel = function(type, begin, end, subject, attributes) {
          this.trace = undefined;
+         this.uri = "";
+         this.id = "";
          this.type = type;
          this.begin = begin;
          this.end = end;
          this.subject = subject;
+         /* Is the obsel synched with the server ? */
+         this.sync_status = false;
          /* Dictionary indexed by ObselType URIs */
          this.attributes = {};
      };
