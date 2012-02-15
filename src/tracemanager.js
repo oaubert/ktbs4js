@@ -241,6 +241,9 @@
              }
              return r;
          },
+
+         toJSONstring: function() {
+             return JSON.stringify(this.toJSON());
          }
      };
 
