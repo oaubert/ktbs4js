@@ -2,8 +2,110 @@
  * Modelled Trace API
  */
 (function() {
-     /* FIXME: Write proper representation functions (str, json, ...)
+     /*
+      * FIXME: Write proper representation functions (str, json, ...)
       */
+
+     var BufferedService_prototype = {
+         /*
+          *  Buffered service for traces
+          */
+         // url: "",
+         // buffer: [],
+         // isReady: false,
+
+         // Synchronise one item
+         sendobsel: function(obsel) {
+             $.ajax({ url: this.url + 'trace',
+                      type: 'POST',
+                      // FIXME: Authentication:
+                      //username: "",
+                      //password: "",
+                      //headers: {
+                      // FIXME: use a token?
+                      //    'Authorization': auth
+                      //}
+                      contentType: 'application/json',
+                      data: '[' + obsel.toJSONstring() + ']',
+                      processData: false,
+                      // Type of the returned data.
+                      // FIXME: investigate JSONP pros/cons
+                      dataType: "json",
+                      error: function(jqXHR, textStatus, errorThrown) {
+                          // FIXME: not called for JSONP/crossdomain
+                          console.log("Error when sending obsel", obsel, ": ", textStatus);
+                      },
+                      success: function(data, textStatus, jqXHR) {
+                          obsel.sync_status = true;
+                          // FIXME: parse the returned JSON, and get
+                          // the updated properties (id, uri...)
+                      }
+                    });
+         },
+
+         /* Flush buffer */
+         flush: function() {
+             console.log("Flushing buffer");
+             // FIXME: should add a counter to avoid starving the sync
+             // process in case of too many generated obsels.
+             // FIXME: add mutex on this.buffer
+             if (this.isReady && this.buffer.length) {
+                 var temp = this.buffer;
+                 this.buffer = [];
+
+                 $.ajax({ url: this.url + 'trace',
+                          type: 'POST',
+                          contentType: 'application/json',
+                          data: JSON.stringify(temp.map(function (o) { return o.toJSON(); })),
+                          processData: false,
+                          // Type of the returned data.
+                          // FIXME: investigate JSONP pros/cons
+                          dataType: "html",
+                          error: function(jqXHR, textStatus, errorThrown) {
+                              // FIXME: not called for JSONP/crossdomain
+                              console.log("Error when sending buffer:", textStatus);
+                          },
+                          success: function(data, textStatus, jqXHR) {
+                              // FIXME: parse the returned JSON, and get
+                              // the updated properties (id, uri...) to apply them to temp items
+                          }
+                        });
+             } else {
+                 console.log("Sync service not ready");
+             }
+         },
+
+         /* Enqueue an obsel */
+         enqueue: function(obsel) {
+             this.buffer.push(obsel);
+         },
+
+         /*
+          * Initialize the sync service
+          */
+         init: function() {
+             var self = this;
+             console.log("Init sync service");
+             $.ajax({ url: this.url + 'login',
+                      type: 'POST',
+                      data: 'userinfo={"name":"ktbs4js"}',
+                      success: function(data, textStatus, jqXHR) {
+                          self.isReady = true;
+                          console.log("init: init success", self.isReady);
+                          if (self.buffer.length) {
+                              self.flush();
+                          }
+                      }
+                    });
+         }
+     };
+     var BufferedService = function(url) {
+         this.url = url;
+         this.buffer = [];
+         this.isReady = false;
+     };
+     BufferedService.prototype = BufferedService_prototype;
+
      var Trace_prototype = {
          /* FIXME: We could/should use a sorted list such as
           http://closure-library.googlecode.com/svn/docs/class_goog_structs_AvlTree.html
@@ -13,8 +115,12 @@
          uri: "",
          sync_mode: "none",
          default_subject: "",
-         /* baseuri is used a the base URI to resolve relative attribute names in obsels */
+         /* baseuri is used as the base URI to resolve relative
+          * attribute-type names in obsels. Strictly speaking, this
+          * should rather be expressed as a reference to model, or
+          * more generically, as a qname/URI dict */
          baseuri: "",
+         syncservice: null,
 
          /* Define the trace URI */
          set_uri: function(uri) {
@@ -26,6 +132,9 @@
           * if needed */
          set_sync_mode: function(mode) {
              this.sync_mode = mode;
+             if (mode !== 'none' && this.syncservice !== null) {
+                 this.syncservice.init();
+             }
          },
 
          /*
@@ -93,6 +202,13 @@
              }
              o.trace = this;
              this.obsels.push(o);
+             if (this.syncservice !== null && this.sync_mode != 'none') {
+                 this.syncservice.enqueue(o);
+                 if (this.sync_mode === 'sync') {
+                     // Immediate sync of the obsel.
+                     this.syncservice.flush();
+                 }
+             }
          },
 
          /* Helper methods */
@@ -127,6 +243,7 @@
          this.default_subject = "";
          /* baseuri is used a the base URI to resolve relative attribute names in obsels */
          this.baseuri = "";
+         this.syncservice = new BufferedService('http://localhost:5000/');
      };
      Trace.prototype = Trace_prototype;
 
