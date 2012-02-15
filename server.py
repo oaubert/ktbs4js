@@ -47,9 +47,10 @@ def login():
 def trace():
     if request.method == 'POST':
         # Handle posting obsels to the trace
-        obsels = json.loads(request.form['trail'])
+        # FIXME: security issue -must check request.content_length
+        obsels = json.loads(request.data)
         for obsel in obsels:
-            obsel['subject'] = session['userinfo']['subject'];
+            obsel['_serverid'] = session['userinfo']['id'];
             db['trace'].save(obsel)
         return "%d obsels stored" % len(obsels)
 
