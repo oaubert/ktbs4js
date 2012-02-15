@@ -223,6 +223,23 @@
 
          del_related_obsel: function(rt, value) {
              /* FIXME: not implemented yet */
+         },
+
+         /*
+          * Return a JSON representation of the obsel
+          */
+         toJSON: function() {
+             var r = {
+                 "@id": this.id,
+                 "@type": this.type,
+                 "begin": this.begin,
+                 "end": this.end,
+                 "subject": this.subject
+             };
+             for (var prop in this.attributes) {
+                 r[prop] = this.attributes[prop];
+             }
+             return JSON.stringify(r);
          }
      };
 
