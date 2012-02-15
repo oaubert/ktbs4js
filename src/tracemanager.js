@@ -239,7 +239,8 @@
              for (var prop in this.attributes) {
                  r[prop] = this.attributes[prop];
              }
-             return JSON.stringify(r);
+             return r;
+         },
          }
      };
 
