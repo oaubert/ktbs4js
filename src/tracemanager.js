@@ -14,35 +14,6 @@
          // buffer: [],
          // isReady: false,
 
-         // Synchronise one item
-         sendobsel: function(obsel) {
-             $.ajax({ url: this.url + 'trace',
-                      type: 'POST',
-                      // FIXME: Authentication:
-                      //username: "",
-                      //password: "",
-                      //headers: {
-                      // FIXME: use a token?
-                      //    'Authorization': auth
-                      //}
-                      contentType: 'application/json',
-                      data: '[' + obsel.toJSONstring() + ']',
-                      processData: false,
-                      // Type of the returned data.
-                      // FIXME: investigate JSONP pros/cons
-                      dataType: "json",
-                      error: function(jqXHR, textStatus, errorThrown) {
-                          // FIXME: not called for JSONP/crossdomain
-                          console.log("Error when sending obsel", obsel, ": ", textStatus);
-                      },
-                      success: function(data, textStatus, jqXHR) {
-                          obsel.sync_status = true;
-                          // FIXME: parse the returned JSON, and get
-                          // the updated properties (id, uri...)
-                      }
-                    });
-         },
-
          /* Flush buffer */
          flush: function() {
              console.log("Flushing buffer");
