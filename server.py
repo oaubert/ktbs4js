@@ -5,7 +5,7 @@ import json
 import bson
 import uuid
 from flask import Flask
-from flask import session, request, redirect, url_for, jsonify, current_app
+from flask import session, request, redirect, url_for, current_app
 import pymongo
 
 # PARAMETRES
@@ -22,7 +22,7 @@ class MongoEncoder(json.JSONEncoder):
     def default(self, obj, **kwargs):
         if isinstance(obj, bson.ObjectId):
             return str(obj)
-        else:            
+        else:
             return json.JSONEncoder.default(obj, **kwargs)
 
 @app.route("/")
@@ -47,18 +47,18 @@ def login():
         session['userinfo']['id'] = str(uuid.uuid1())
         dictform = dict(session['userinfo'])
         db['userinfo'].save(dictform)
-        
+
         app.logger.debug("Logged in as " + session['userinfo']['id'])
     return redirect(url_for('index'))
 
-def iter_obsels():
-    for o in db['trace'].find():
+def iter_obsels(subject):
+    for o in db['trace'].find({'subject': subject }):
         o['@id'] = o['_id']
         del o['_id']
         del o['_serverid']
         yield o
 
-@app.route('/trace', methods= [ 'POST', 'GET' ])
+@app.route('/trace/', methods= [ 'POST', 'GET' ])
 def trace():
     if request.method == 'POST':
         # Handle posting obsels to the trace
@@ -69,16 +69,22 @@ def trace():
             db['trace'].save(obsel)
         return "%d obsels stored" % len(obsels)
     elif request.method == 'GET':
-        return current_app.response_class( json.dumps({ 
+        return ("""<b>Available subjects:</b>\n<ul>"""
+                + "\n".join("""<li><a href="%s">%s</a></li>""" % (s, s) for s in db['trace'].distinct('subject'))
+                + """</ul>""")
+
+@app.route('/trace/<subject>', methods= [ 'GET' ])
+def trace_get(subject):
+        return current_app.response_class( json.dumps({
                     "@context": [
                         "http://liris.cnrs.fr/silex/2011/ktbs-jsonld-context",
                         #{ "m": "http://localhost:8001/base1/model1#" }
                         ],
                     "@id": ".",
                     "hasObselList": "",
-                    'obsels': list(iter_obsels()) },
+                    'obsels': list(iter_obsels(subject)) },
                                                       indent=None if request.is_xhr else 2,
-                                                      cls=MongoEncoder), 
+                                                      cls=MongoEncoder),
                                            mimetype='application/json')
 
 @app.route('/logout')
