@@ -51,8 +51,8 @@ def login():
         app.logger.debug("Logged in as " + session['userinfo']['id'])
     return redirect(url_for('index'))
 
-def iter_obsels(subject):
-    for o in db['trace'].find({'subject': subject }):
+def iter_obsels(**kwd):
+    for o in db['trace'].find(kwd):
         o['@id'] = o['_id']
         del o['_id']
         del o['_serverid']
@@ -73,19 +73,37 @@ def trace():
                 + "\n".join("""<li><a href="%s">%s</a></li>""" % (s, s) for s in db['trace'].distinct('subject'))
                 + """</ul>""")
 
-@app.route('/trace/<subject>', methods= [ 'GET' ])
-def trace_get(subject):
+@app.route('/trace/<path:info>', methods= [ 'GET' ])
+def trace_get(info):
+    info = info.split('/')
+    if len(info) == 1:
+        # subject
         return current_app.response_class( json.dumps({
                     "@context": [
                         "http://liris.cnrs.fr/silex/2011/ktbs-jsonld-context",
                         #{ "m": "http://localhost:8001/base1/model1#" }
-                        ],
+                    ],
                     "@id": ".",
                     "hasObselList": "",
-                    'obsels': list(iter_obsels(subject)) },
+                    'obsels': list(iter_obsels(subject=info[0])) },
                                                       indent=None if request.is_xhr else 2,
                                                       cls=MongoEncoder),
                                            mimetype='application/json')
+    elif len(info) == 2:
+        # subject, id
+        return current_app.response_class( json.dumps({
+                    "@context": [
+                        "http://liris.cnrs.fr/silex/2011/ktbs-jsonld-context",
+                        #{ "m": "http://localhost:8001/base1/model1#" }
+                    ],
+                    "@id": ".",
+                    "hasObselList": "",
+                    'obsels': list(iter_obsels(_id=bson.ObjectId(info[1]))) },
+                                                      indent=None if request.is_xhr else 2,
+                                                      cls=MongoEncoder),
+                                           mimetype='application/json')
+    else:
+        return "Got info: " + ",".join(info)
 
 @app.route('/logout')
 def logout():
