@@ -13,18 +13,22 @@
          // url: "",
          // buffer: [],
          // isReady: false,
+         // timer: null,
 
          /* Flush buffer */
          flush: function() {
-             console.log("Flushing buffer");
              // FIXME: should add a counter to avoid starving the sync
              // process in case of too many generated obsels.
              // FIXME: add mutex on this.buffer
-             if (this.isReady && this.buffer.length) {
+             if (! this.isReady)
+             {
+                 console.log("Sync service not ready");
+
+             } else if (this.buffer.length) {
                  var temp = this.buffer;
                  this.buffer = [];
 
-                 $.ajax({ url: this.url + 'trace',
+                 $.ajax({ url: this.url + 'trace/',
                           type: 'POST',
                           contentType: 'application/json',
                           data: JSON.stringify(temp.map(function (o) { return o.toJSON(); })),
@@ -41,8 +45,6 @@
                               // the updated properties (id, uri...) to apply them to temp items
                           }
                         });
-             } else {
-                 console.log("Sync service not ready");
              }
          },
 
@@ -51,18 +53,36 @@
              this.buffer.push(obsel);
          },
 
+         start_timer: function() {
+             var self = this;
+             if (this.timer === null) {
+                 this.timer = window.setInterval(function() {
+                                                     console.log("Flushing timeout");
+                                                     self.flush();
+                                                 }, this.timeOut);
+             }
+         },
+
+         stop_timer: function() {
+             if (this.timer !== null) {
+                 window.clearInterval(this.timer);
+                 this.timer = null;
+             }
+         },
+
          /*
           * Initialize the sync service
           */
          init: function() {
              var self = this;
-             console.log("Init sync service");
+             if (this.isReady)
+                 /* Already initialized */
+                 return;
              $.ajax({ url: this.url + 'login',
                       type: 'POST',
                       data: 'userinfo={"name":"ktbs4js"}',
                       success: function(data, textStatus, jqXHR) {
                           self.isReady = true;
-                          console.log("init: init success", self.isReady);
                           if (self.buffer.length) {
                               self.flush();
                           }
@@ -74,6 +94,9 @@
          this.url = url;
          this.buffer = [];
          this.isReady = false;
+         this.timer = null;
+         /* Flush buffer every timeOut ms if the sync_mode is delayed */
+         this.timeOut = 2000;
      };
      BufferedService.prototype = BufferedService_prototype;
 
@@ -98,13 +121,20 @@
              this.uri = uri;
          },
 
-         /* Sync mode: buffered, sync (immediate sync), none (no
+         /* Sync mode: delayed, sync (immediate sync), none (no
           * synchronisation with server, the trace has to be explicitly saved
           * if needed */
          set_sync_mode: function(mode) {
              this.sync_mode = mode;
-             if (mode !== 'none' && this.syncservice !== null) {
-                 this.syncservice.init();
+             if (this.syncservice != null) {
+                 if (mode !== 'none') {
+                     this.syncservice.init();
+                 }
+                 if (mode == 'delayed') {
+                     this.syncservice.start_timer();
+                 } else {
+                     this.syncservice.stop_timer();
+                 }
              }
          },
 
