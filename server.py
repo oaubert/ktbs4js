@@ -65,7 +65,7 @@ def trace():
         # FIXME: security issue -must check request.content_length
         obsels = json.loads(request.data)
         for obsel in obsels:
-            obsel['_serverid'] = session['userinfo']['id'];
+            obsel['_serverid'] = session['userinfo'].get('id', "");
             db['trace'].save(obsel)
         return "%d obsels stored" % len(obsels)
     elif request.method == 'GET':
