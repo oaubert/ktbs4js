@@ -13,9 +13,9 @@ How To
 ### Setup it
 
 You need to install : 
-*  python 2.7   (http://python.org/)
-*  mongo DB 	 (http://www.mongodb.org/)
-*  flask  		 (http://flask.pocoo.org/)
+* python 2.7   (http://python.org/)
+* mongo DB 	 (http://www.mongodb.org/)
+* flask  		 (http://flask.pocoo.org/)
 
 ### Run it
 
