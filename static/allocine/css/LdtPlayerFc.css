@@ -1,0 +1,182 @@
+		#demo-frame > div.demo { padding: 5px !important; };
+		
+		button.ui-button-icon-only  {
+			height:1.5em;
+			width:1.5em;
+		}
+		
+		#Ldt-loader{
+			background:url(imgs/transBlack.gif);
+			width:10px;
+			height:10px;
+		}
+		
+		#Ldt-controler {
+			font-size: 62.5%;
+			font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
+			background-color:#EEE;
+			height:35px;
+			padding:5px;
+		}
+		
+		.Ldt-iri-chapter{
+			padding-top:10px;
+			padding-bottom:5px;
+			border-left:solid 1px #000;
+			border-right:solid 1px #000;
+		}
+		
+		#Ldt-loader {
+			background:url(imgs/loader_fc.gif) no-repeat;
+			width:20px;
+			height:16px;
+			float:left;
+		}
+		
+		.tooltip {
+			display:none;
+			background:transparent url(imgs/white_arrow_mini.png);
+			font-size:12px;
+			height:55px;
+			width:180px;
+			padding:10px;
+			padding-left:15px;
+			padding-top:15px;
+			padding-right:15px;
+			color:#000;	
+			font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
+		}
+		#Ldt-Root{
+			font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
+		}
+		#Ldt-Hat{
+			height:3px;
+		}
+		#Ldt-Annotations{
+			padding-left:5px;
+			width:470px;
+			float:left;
+			font-size: 62.5%;
+		}
+		#Ldt-SaTitle{
+			padding-top:2px;
+			padding-bottom:5px;
+			font-size:18px;
+			height:22p;
+			color:#4D4D4D;
+		}
+		#Ldt-SaDescription{
+			font-size:12px;	
+		}
+		#Ldt-Show-Arrow-container{
+			margin-left:60px;
+		}
+		#Ldt-Show-Arrow{
+			position:relative;
+			background:url(imgs/purple_arrow_Show.png);
+			width:27px;
+			height:13px;
+			margin-top:12px;
+			margin-left:-10px;
+			z-index:999999999;
+		}
+
+		#Ldt-output{
+			display:none;
+		}
+		#Ldt-Show-Tags{
+			position:relative;
+			height:13px;
+			margin-top:-10px;
+			border: solid 1px #000;
+		}
+		#Ldt-ShowAnnotation-video{
+			position:absolute;
+			z-index: 999;
+			padding:5px;
+			background:url(imgs/transBlack.png);
+			font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
+			color:#FFF;	
+		}
+		#Ldt-ShowAnnotation-audio{
+			position:relative;
+			padding:5px;
+			background-color:#decfe2;
+			font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
+			color:#4D4D4D;	
+		}
+		#Ldt-SaKeyword{
+			background-color:#bc85be;
+			color:#4D4D4D;
+			padding:5px;
+			font-weight:bold;
+			text-align:left;
+			float:left;
+			font-size:10px;
+		}
+		#Ldt-SaShareTools{
+			text-align:right;
+			float:right;
+		}
+		
+		
+		#Ldt-PlaceHolder{
+			position:absolue;
+			float:none;
+		}
+		.Ldt-Search-select{
+			padding-top:25px;
+		}
+		.Ldt-Search-unselect{
+			border-top:0px;
+		}
+		
+		.Ldt-mode-radio{
+			visibility:hidden;
+			height:0px;
+			display:none
+		}
+		
+		.Ldt-Control1{
+			width:60px;
+			float:left;
+		}
+		.Ldt-Control2{
+			padding-left:10px;
+			width:60px;
+			float:left;
+		}
+		.Ldt-cleaner {
+			clear:both;
+		} 
+		.share {
+			background:url('imgs/widget20.png') no-repeat scroll 0 0 transparent ;
+			display:block;
+			height:16px;
+			line-height:16px !important;
+			overflow:hidden;
+			width:16px;
+			float:left;
+			cursor:pointer;
+			margin:2px;
+		}
+		.shareFacebook{
+			background-position:0 -704px;
+		}
+		.shareMySpace{
+			background-position:0 -736px;
+		}
+		.shareTwitter{
+			background-position:0 -1072px;
+		}
+		.shareGoogle{
+			background-position:0 -752px;
+		}
+		.shareDelicious{
+			background-position:0 -672px;
+		}
+		.shareJamesPot{
+			background-position:0 -1808px;
+		}
+		
+		
