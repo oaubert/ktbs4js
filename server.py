@@ -5,7 +5,7 @@ import json
 import bson
 import uuid
 from flask import Flask
-from flask import session, request, redirect, url_for, current_app
+from flask import session, request, redirect, url_for, current_app, make_response
 import pymongo
 
 # PARAMETRES
@@ -62,9 +62,10 @@ def iter_obsels(**kwd):
         del o['_serverid']
         yield o
 
-@app.route('/trace/', methods= [ 'POST', 'GET' ])
+@app.route('/trace/', methods= [ 'POST', 'GET', 'HEAD' ])
 def trace():
-    if request.method == 'POST':
+    if (request.method == 'POST' or 
+        (request.method == 'GET' and 'data' in request.values)):
         # Handle posting obsels to the trace
         # FIXME: security issue -must check request.content_length
         if not 'userinfo' in session:
@@ -83,12 +84,20 @@ def trace():
         return ("""<b>Available subjects:</b>\n<ul>"""
                 + "\n".join("""<li><a href="%s">%s</a></li>""" % (s, s) for s in db['trace'].distinct('subject'))
                 + """</ul>""")
+    elif request.method == 'HEAD':
+        response = make_response()
+        response.headers['X-Obsel-Count'] = str(db['trace'].count())
+        return response
 
-@app.route('/trace/<path:info>', methods= [ 'GET' ])
+@app.route('/trace/<path:info>', methods= [ 'GET', 'HEAD' ])
 def trace_get(info):
     info = info.split('/')
     if len(info) == 1:
         # subject
+        if request.method == 'HEAD':
+            response = make_response()
+            response.headers['X-Obsel-Count'] = str(db['trace'].find({'subject': info[0]}).count())
+            return response
         return current_app.response_class( json.dumps({
                     "@context": [
                         "http://liris.cnrs.fr/silex/2011/ktbs-jsonld-context",
