@@ -1,6 +1,6 @@
 $(window).load(function() {
                    console.log("Starting test")
-                   tr = window.tracemanager.init_trace("test");
+                   tr = window.tracemanager.init_trace("test", "", 'GET');
                    tr.set_sync_mode('delayed');
                    tr.set_default_subject("oaubert");
                    tr.trace("StartTracing", { foo: "bar" });
