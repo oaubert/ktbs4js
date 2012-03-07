@@ -35,18 +35,22 @@ def index():
 
 @app.route('/login', methods = ['GET', 'POST'])
 def login():
-    if 'userinfo' in session:
+    if 'userinfo' in session and 'name' in session['userinfo']:
         app.logger.debug("Already logged in")
     else:
         # 'userinfo' is either a (GET) named param, or a (POST) form
         # field, whose value contains JSON data with information about
         # the user
         params = request.values.get('userinfo', "{'name':'Anonymous'}")
-        session['userinfo'] = json.loads(params)
 
-        session['userinfo']['id'] = str(uuid.uuid1())
-        dictform = dict(session['userinfo'])
-        db['userinfo'].save(dictform)
+        if 'userinfo' in session:
+            # session was already initialized. Update its information.
+            db['userinfo'].update( {"id", session['userinfo']['id']},
+                                   json.loads(params) )
+        else:
+            session['userinfo'] = json.loads(params)
+            session['userinfo'].setdefault('id', str(uuid.uuid1()))
+            db['userinfo'].save(dict(session['userinfo']))
 
         app.logger.debug("Logged in as " + session['userinfo']['id'])
     return redirect(url_for('index'))
@@ -63,11 +67,18 @@ def trace():
     if request.method == 'POST':
         # Handle posting obsels to the trace
         # FIXME: security issue -must check request.content_length
-        obsels = json.loads(request.data)
+        if not 'userinfo' in session:
+            # No explicit login. Generate a session id
+            session['userinfo'].setdefault('id', str(uuid.uuid1()))
+            db['userinfo'].save(dict(session['userinfo']))
+        if request.method == 'POST':
+            obsels = json.loads(request.data)
+        else:
+            obsels = json.loads(request.values['data'])
         for obsel in obsels:
             obsel['_serverid'] = session['userinfo'].get('id', "");
             db['trace'].save(obsel)
-        return "%d obsels stored" % len(obsels)
+        return "%d" % len(obsels)
     elif request.method == 'GET':
         return ("""<b>Available subjects:</b>\n<ul>"""
                 + "\n".join("""<li><a href="%s">%s</a></li>""" % (s, s) for s in db['trace'].distinct('subject'))
