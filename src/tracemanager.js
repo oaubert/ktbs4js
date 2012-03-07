@@ -28,23 +28,33 @@
                  var temp = this.buffer;
                  this.buffer = [];
 
-                 $.ajax({ url: this.url + 'trace/',
-                          type: 'POST',
-                          contentType: 'application/json',
-                          data: JSON.stringify(temp.map(function (o) { return o.toJSON(); })),
-                          processData: false,
-                          // Type of the returned data.
-                          // FIXME: investigate JSONP pros/cons
-                          dataType: "html",
-                          error: function(jqXHR, textStatus, errorThrown) {
-                              // FIXME: not called for JSONP/crossdomain
-                              console.log("Error when sending buffer:", textStatus);
-                          },
-                          success: function(data, textStatus, jqXHR) {
-                              // FIXME: parse the returned JSON, and get
-                              // the updated properties (id, uri...) to apply them to temp items
-                          }
-                        });
+                 if (this.mode == 'GET')
+                 {
+                     // FIXME: check data length (< 2K is safe)
+                     var request=$('<img/>').attr('src',
+                                                  this.url
+                                                  + 'trace?data='
+                                                  + JSON.stringify(temp.map(function (o) { return o.toJSON(); })));
+                 }
+                 else
+                 {
+                     $.ajax({ url: this.url + 'trace/',
+                              type: 'POST',
+                              contentType: 'application/json',
+                              data: JSON.stringify(temp.map(function (o) { return o.toJSON(); })),
+                              processData: false,
+                              // Type of the returned data.
+                              dataType: "html",
+                              error: function(jqXHR, textStatus, errorThrown) {
+                                  // FIXME: not called for JSONP/crossdomain
+                                  console.log("Error when sending buffer:", textStatus);
+                              },
+                              success: function(data, textStatus, jqXHR) {
+                                  // FIXME: parse the returned JSON, and get
+                                  // the updated properties (id, uri...) to apply them to temp items
+                              }
+                            });
+                 }
              }
          },
 
@@ -78,23 +88,39 @@
              if (this.isReady)
                  /* Already initialized */
                  return;
-             $.ajax({ url: this.url + 'login',
-                      type: 'POST',
-                      data: 'userinfo={"name":"ktbs4js"}',
-                      success: function(data, textStatus, jqXHR) {
-                          self.isReady = true;
-                          if (self.buffer.length) {
-                              self.flush();
+             if (this.mode == 'GET')
+             {
+                 var request=$('<img/>').attr('src', this.url + 'login?userinfo={"name":"ktbs4js"}');
+                 // Do not wait for the return, assume it is
+                 // initialized. This assumption will not work anymore
+                 // if login returns some necessary information
+                 this.isReady = true;
+             }
+             else
+             {
+                 $.ajax({ url: this.url + 'login',
+                          type: 'POST',
+                          data: 'userinfo={"name":"ktbs4js"}',
+                          success: function(data, textStatus, jqXHR) {
+                              self.isReady = true;
+                              if (self.buffer.length) {
+                                  self.flush();
+                              }
                           }
-                      }
-                    });
+                        });
+             }
          }
      };
-     var BufferedService = function(url) {
+     var BufferedService = function(url, mode) {
          this.url = url;
          this.buffer = [];
          this.isReady = false;
          this.timer = null;
+         /* mode can be either POST or GET */
+         if (mode == 'POST' || mode == 'GET')
+             this.mode = mode;
+         else
+             this.mode = 'POST';
          /* Flush buffer every timeOut ms if the sync_mode is delayed */
          this.timeOut = 2000;
      };
@@ -233,18 +259,20 @@
          }
      };
 
-     var Trace = function(uri) {
+     var Trace = function(uri, requestmode) {
          /* FIXME: We could/should use a sorted list such as
           http://closure-library.googlecode.com/svn/docs/class_goog_structs_AvlTree.html
           to speed up queries based on time */
          this.obsels = [];
          /* Trace URI */
-         this.uri = "";
+         if (uri === undefined)
+             uri = "";
+         this.uri = uri;
          this.sync_mode = "none";
          this.default_subject = "";
          /* baseuri is used a the base URI to resolve relative attribute names in obsels */
          this.baseuri = "";
-         this.syncservice = new BufferedService('http://localhost:5000/');
+         this.syncservice = new BufferedService('http://localhost:5000/', requestmode);
      };
      Trace.prototype = Trace_prototype;
 
@@ -396,11 +424,8 @@
           *
           * If another existed with the same name before, then it is replaced by a new one.
           */
-         init_trace: function(name, _uri) {
-             var t = new Trace();
-             if (typeof _uri !== 'undefined') {
-                 t.uri = _uri;
-             }
+         init_trace: function(name, _uri, requestmode) {
+             var t = new Trace(_uri, requestmode);
              this.traces[name] = t;
              return t;
          }
