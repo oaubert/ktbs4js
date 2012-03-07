@@ -70,7 +70,7 @@ def trace():
         # FIXME: security issue -must check request.content_length
         if not 'userinfo' in session:
             # No explicit login. Generate a session id
-            session['userinfo'].setdefault('id', str(uuid.uuid1()))
+            session['userinfo'] = {'id': str(uuid.uuid1())}
             db['userinfo'].save(dict(session['userinfo']))
         if request.method == 'POST':
             obsels = json.loads(request.data)
