@@ -73,7 +73,7 @@ def trace():
             session['userinfo'] = {'id': str(uuid.uuid1())}
             db['userinfo'].save(dict(session['userinfo']))
         if request.method == 'POST':
-            obsels = json.loads(request.data)
+            obsels = request.json
         else:
             obsels = json.loads(request.values['data'])
         for obsel in obsels:
