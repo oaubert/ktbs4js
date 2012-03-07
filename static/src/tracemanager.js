@@ -238,6 +238,29 @@
              }
          },
 
+	     obselProbe : function(element, bindingEvent, ObselFunction) {
+			console.log("!!!!!!!!- ICI -!!!!!!!!!")
+			console.log(element)
+			console.log(bindingEvent)
+			console.log(ObselFunction)
+
+	        //var myOPI = self.setInterval("ObselProbeInterval("+element+","+bindingEvent+","+ObselFunction+")",1000);
+			var myOPI = self.setInterval("ObselProbeInterval("+element+")",1000);
+			//var ObselProbeInterval = function(element, bindingEvent, ObselFunction){
+			var ObselProbeInterval = function(element){
+				console.log("!!!!!!!!- ObselProbeInterval -!!!!!!!!!")
+				console.log($(element).length)
+				/*
+				if($(element).length!=0){
+					$(element).bind(bindingEvent, ObselFunction );
+					this.clearInterval();
+				}else{	console.log("!!!!!!!!- EXISTE PAS -!!!!!!!!!")
+				}
+				*/
+				//
+			}
+
+		 },
          /* Helper methods */
 
          /* Create a new obsel with the given attributes */
@@ -281,6 +304,7 @@
           * purposes. They MUST be defined in the constructor
           * function. */
          trace: undefined,
+		 obselProbe: undefined,
          type: undefined,
          begin: undefined,
          end: undefined,
@@ -329,7 +353,6 @@
          list_relating_obsels: function (rt) {
              /* FIXME: not implemented yet */
          },
-
          /*
           * Return the value of the given attribute type for this obsel
           */
