@@ -239,17 +239,17 @@
          },
 
 	     obselProbe : function(element, bindingEvent, ObselFunction) {
-			console.log("!!!!!!!!- ICI -!!!!!!!!!")
-			console.log(element)
-			console.log(bindingEvent)
-			console.log(ObselFunction)
+			console.log("!!!!!!!!- ICI -!!!!!!!!!");
+			console.log(element);
+			console.log(bindingEvent);
+			console.log(ObselFunction);
 
 	        //var myOPI = self.setInterval("ObselProbeInterval("+element+","+bindingEvent+","+ObselFunction+")",1000);
 			var myOPI = self.setInterval("ObselProbeInterval("+element+")",1000);
 			//var ObselProbeInterval = function(element, bindingEvent, ObselFunction){
-			var ObselProbeInterval = function(element){
-				console.log("!!!!!!!!- ObselProbeInterval -!!!!!!!!!")
-				console.log($(element).length)
+			var ObselProbeInterval = function(element) {
+				console.log("!!!!!!!!- ObselProbeInterval -!!!!!!!!!");
+				console.log($(element).length);
 				/*
 				if($(element).length!=0){
 					$(element).bind(bindingEvent, ObselFunction );
@@ -258,7 +258,7 @@
 				}
 				*/
 				//
-			}
+			};
 
 		 },
          /* Helper methods */
