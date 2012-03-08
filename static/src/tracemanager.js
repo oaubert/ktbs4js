@@ -23,18 +23,22 @@
              if (! this.isReady)
              {
                  console.log("Sync service not ready");
-
              } else if (this.buffer.length) {
                  var temp = this.buffer;
                  this.buffer = [];
 
                  if (this.mode == 'GET')
                  {
+                     // GET mode: do some data mangline. We mark the
+                     // "compressed" nature of the generated JSON by
+                     // prefixing it with c
+                     var data = 'c' + JSON.stringify(temp.map(function (o) { return o.toCompactJSON(); }));
+                     // Swap " (very frequent, which will be
+                     // serialized into %22) and / (rather rare), this
+                     // saves some bytes
+                     data = data.replace(/[\/"]/g, function(s){ return s == '/' ? '"' : '/'; });
                      // FIXME: check data length (< 2K is safe)
-                     var request=$('<img/>').attr('src',
-                                                  this.url
-                                                  + 'trace?data='
-                                                  + JSON.stringify(temp.map(function (o) { return o.toJSON(); })));
+                     var request=$('<img/>').attr('src', this.url + 'trace?data=' + data);
                  }
                  else
                  {
@@ -140,6 +144,10 @@
           * should rather be expressed as a reference to model, or
           * more generically, as a qname/URI dict */
          baseuri: "",
+         /* Mapping of obsel type or property name to a compact
+          * representation (shorthands).
+          */
+         shorthands: null,
          syncservice: null,
 
          /* Define the trace URI */
@@ -293,6 +301,7 @@
          this.uri = uri;
          this.sync_mode = "none";
          this.default_subject = "";
+         this.shorthands = {};
          /* baseuri is used a the base URI to resolve relative attribute names in obsels */
          this.baseuri = "";
          this.syncservice = new BufferedService('http://localhost:5000/', requestmode);
@@ -407,6 +416,26 @@
              };
              for (var prop in this.attributes) {
                  r[prop] = this.attributes[prop];
+             }
+             return r;
+         },
+
+         /*
+          * Return a compact JSON representation of the obsel.
+          * Use predefined + custom shorthands for types/properties
+          */
+         toCompactJSON: function() {
+             var r = {
+                 "@i": this.id,
+                 "@t": (this.trace.shorthands.hasOwnProperty(this.type)
+                        ? this.trace.shorthands[this.type] : this.type),
+                 "@b": this.begin,
+                 "@e": this.end,
+                 "@s": this.subject
+             };
+             for (var prop in this.attributes) {
+                 var v = this.attributes[prop];
+                 r[prop] = this.trace.shorthands.hasOwnProperty(v) ? this.trace.shorthands[v] : v;
              }
              return r;
          },

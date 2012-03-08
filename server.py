@@ -13,6 +13,15 @@ import pymongo
 # COL= Collection
 DB   	  = 'ktbs'
 
+# Pseudo-JSON compression data
+VALUE_TABLE = {
+    '@i': '@id',
+    '@t': '@type',
+    '@b': 'begin',
+    '@e': 'end',
+    '@s': 'subject',
+}
+
 connection = pymongo.Connection("localhost", 27017)
 db = connection[DB]
 
@@ -75,7 +84,16 @@ def trace():
         if request.method == 'POST':
             obsels = request.json
         else:
-            obsels = json.loads(request.values['data'])
+            data = request.values['data']
+            if data.startswith('c['):
+                # Data mangling here. Pseudo compression is involved.
+                # Swap " and /. Note that we use unicode.translate, so we pass a dict mapping.
+                data = data[1:].translate({ord(u'"'): u'/', ord(u'/'):u'"'})
+                # Replace keys with matching values
+                obsels = [ dict((VALUE_TABLE.get(k, k), v) for k, v in o.iteritems() )
+                           for o in json.loads(data) ]
+            else:
+                obsels = json.loads(data)
         for obsel in obsels:
             obsel['_serverid'] = session['userinfo'].get('id', "");
             db['trace'].save(obsel)
