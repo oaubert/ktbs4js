@@ -38,7 +38,7 @@
                      // saves some bytes
                      data = data.replace(/[\/"]/g, function(s){ return s == '/' ? '"' : '/'; });
                      // FIXME: check data length (< 2K is safe)
-                     var request=$('<img/>').attr('src', this.url + 'trace?data=' + data);
+                     var request=$('<img/>').attr('src', this.url + 'trace/?data=' + data);
                  }
                  else
                  {
