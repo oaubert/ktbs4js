@@ -119,7 +119,7 @@ def trace():
 @app.route('/trace/<path:info>', methods= [ 'GET', 'HEAD' ])
 def trace_get(info):
     info = info.split('/')
-    if len(info) == 1:
+    if len(info) == 1 or (len(info) == 2 and info[1] == ''):
         # subject
         if request.method == 'HEAD':
             response = make_response()
