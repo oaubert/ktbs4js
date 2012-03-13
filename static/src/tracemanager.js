@@ -305,6 +305,7 @@
          /* baseuri is used a the base URI to resolve relative attribute names in obsels */
          this.baseuri = "";
          this.syncservice = new BufferedService('http://localhost:5000/', requestmode);
+         $(window).unload( function () { if (this.syncservice && this.sync_mode !== 'none') this.syncservice.flush(); });
      };
      Trace.prototype = Trace_prototype;
 
