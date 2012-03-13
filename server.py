@@ -97,7 +97,16 @@ def trace():
         for obsel in obsels:
             obsel['_serverid'] = session['userinfo'].get('id', "");
             db['trace'].save(obsel)
-        return "%d" % len(obsels)
+        response = make_response()
+        response.headers['X-Obsel-Count'] = str(len(obsels))
+        if request.method == 'GET':
+            # GET methods are usually used to make cross-site
+            # requests, and invoked through a <img> src
+            # attribute. Let's return a pseudo-image.
+            response.mimetype = 'image/png'
+        else:    
+            response.data = "%d" % len(obsels)
+        return response
     elif request.method == 'GET':
         return ("""<b>Available subjects:</b>\n<ul>"""
                 + "\n".join("""<li><a href="%s">%s</a></li>""" % (s, s) for s in db['trace'].distinct('subject'))
