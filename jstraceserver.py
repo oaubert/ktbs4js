@@ -4,6 +4,7 @@ import os
 import json
 import bson
 import uuid
+from optparse import OptionParser
 from flask import Flask, Response
 from flask import session, request, redirect, url_for, current_app, make_response, abort
 import pymongo
@@ -29,10 +30,11 @@ CONFIG = {
     # Run the server in external access mode (i.e. not only localhost)
     'allow_external_access': True,
 
-    # Allow to access the stored traces from localhost
-    'allow_local_trace_getting': False,
-    # Allow to access the stored traces from any host
-    'allow_external_trace_getting': False,
+    # Trace access control (for reading) is either:
+    # 'none' -> no access
+    # 'localhost' -> localhost only
+    # 'any' -> any host
+    'trace_access_control': 'none',
 }
 
 connection = pymongo.Connection("localhost", 27017)
@@ -90,7 +92,7 @@ def iter_obsels(**kwd):
 
 @app.route('/trace/', methods= [ 'POST', 'GET', 'HEAD' ])
 def trace():
-    if (request.method == 'POST' or 
+    if (request.method == 'POST' or
         (request.method == 'GET' and 'data' in request.values)):
         # Handle posting obsels to the trace
         # FIXME: security issue -must check request.content_length
@@ -121,20 +123,20 @@ def trace():
             # requests, and invoked through a <img> src
             # attribute. Let's return a pseudo-image.
             response.mimetype = 'image/png'
-        else:    
+        else:
             response.data = "%d" % len(obsels)
         return response
     elif request.method == 'GET':
-        if (CONFIG['allow_external_trace_getting']
-            or (request.remote_addr == '127.0.0.1' and CONFIG['allow_local_trace_getting'])):
+        if (CONFIG['trace_access_control'] == 'any'
+            or (CONFIG['trace_access_control'] == 'localhost' and request.remote_addr == '127.0.0.1')):
             return ("""<b>Available subjects:</b>\n<ul>"""
                     + "\n".join("""<li><a href="%s">%s</a></li>""" % (s, s) for s in db['trace'].distinct('subject'))
                     + """</ul>""")
         else:
             abort(401)
     elif request.method == 'HEAD':
-        if (CONFIG['allow_external_trace_getting']
-            or (request.remote_addr == '127.0.0.1' and CONFIG['allow_local_trace_getting'])):
+        if (CONFIG['trace_access_control'] == 'any'
+            or (CONFIG['trace_access_control'] == 'localhost' and request.remote_addr == '127.0.0.1')):
             response = make_response()
             response.headers['X-Obsel-Count'] = str(db['trace'].count())
             return response
@@ -143,8 +145,8 @@ def trace():
 
 @app.route('/trace/<path:info>', methods= [ 'GET', 'HEAD' ])
 def trace_get(info):
-    if (not (CONFIG['allow_external_trace_getting']
-             or (request.remote_addr == '127.0.0.1' and CONFIG['allow_local_trace_getting']))):
+    if (CONFIG['trace_access_control'] != 'any'
+        and (CONFIG['trace_access_control'] == 'localhost' and request.remote_addr != '127.0.0.1')):
         abort(401)
         # Useless, but just for the sake of it:
         return
@@ -191,6 +193,23 @@ def logout():
 app.secret_key = os.urandom(24)
 
 if __name__ == "__main__":
+    parser=OptionParser(usage="""Trace server.\n%prog [options]""")
+
+    parser.add_option("-d", "--debug", dest="enable_debug", action="store_true",
+                      help="Enable debug. This implicitly disallows external access.",
+                      default=False)
+
+    parser.add_option("-e", "--external", dest="allow_external_access", action="store_true",
+                      help="Allow external access (from any host)", default=False)
+
+    parser.add_option("-g", "--get-access-control",
+                      action="store", type="choice", dest="trace_access_control",
+                      choices=("none", "localhost", "any"), default='none',
+                      help="""Control trace GET access. Values: none: no trace access; localhost: localhost only; any: any host can access""")
+
+    (options, args) = parser.parse_args()
+    CONFIG.update(vars(options))
+
     if CONFIG['enable_debug']:
         app.run(debug=True)
     elif CONFIG['allow_external_access']:
