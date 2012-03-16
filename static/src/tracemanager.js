@@ -304,8 +304,14 @@
          this.shorthands = {};
          /* baseuri is used a the base URI to resolve relative attribute names in obsels */
          this.baseuri = "";
-         this.syncservice = new BufferedService('http://localhost:5000/', requestmode);
-         $(window).unload( function () { if (this.syncservice && this.sync_mode !== 'none') this.syncservice.flush(); });
+
+         this.syncservice = new BufferedService(uri, requestmode);
+         $(window).unload( function () {
+                               if (this.syncservice && this.sync_mode !== 'none') {
+                                   this.syncservice.flush();
+                                   this.syncservice.stop_timer();
+                               }
+                           });
      };
      Trace.prototype = Trace_prototype;
 
@@ -477,8 +483,14 @@
           *
           * If another existed with the same name before, then it is replaced by a new one.
           */
-         init_trace: function(name, _uri, requestmode) {
-             var t = new Trace(_uri, requestmode);
+         init_trace: function(name, params)
+         {
+             console.log("init_trace", params);
+             url = params.url ? params.url : "";
+             requestmode = params.requestmode ? params.requestmode : "POST";
+             syncmode = params.syncmode ? params.syncmode : "none";
+             var t = new Trace(url, requestmode);
+             t.set_sync_mode(syncmode);
              this.traces[name] = t;
              return t;
          }

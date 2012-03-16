@@ -1,5 +1,5 @@
 $(window).load(function() {
-                   trace_cinecast = window.tracemanager.init_trace("festival", { uri: "http://traces.advene.org:5000/",
+                   trace_cinecast = window.tracemanager.init_trace("festival", { url: "http://traces.advene.org:5000/",
                                                                                  requestmode: 'GET',
                                                                                  syncmode: 'sync' });
                    trace_cinecast.trace('SiteNavigate', { userid: userinfo ? userinfo.id : "anonymous",
