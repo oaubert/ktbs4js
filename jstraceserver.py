@@ -4,8 +4,8 @@ import os
 import json
 import bson
 import uuid
-from flask import Flask
-from flask import session, request, redirect, url_for, current_app, make_response
+from flask import Flask, Response
+from flask import session, request, redirect, url_for, current_app, make_response, abort
 import pymongo
 
 # PARAMETRES
@@ -22,6 +22,19 @@ VALUE_TABLE = {
     '@s': 'subject',
 }
 
+# Server configuration
+CONFIG = {
+    # Enable debug. This implicitly disallows external access
+    'enable_debug': False,
+    # Run the server in external access mode (i.e. not only localhost)
+    'allow_external_access': True,
+
+    # Allow to access the stored traces from localhost
+    'allow_local_trace_getting': False,
+    # Allow to access the stored traces from any host
+    'allow_external_trace_getting': False,
+}
+
 connection = pymongo.Connection("localhost", 27017)
 db = connection[DB]
 
@@ -33,6 +46,10 @@ class MongoEncoder(json.JSONEncoder):
             return str(obj)
         else:
             return json.JSONEncoder.default(obj, **kwargs)
+
+@app.errorhandler(401)
+def custom_401(error):
+    return Response('Unauthorized access', 401, {'WWWAuthenticate':'Basic realm="Login Required"'})
 
 @app.route("/")
 def index():
@@ -108,16 +125,29 @@ def trace():
             response.data = "%d" % len(obsels)
         return response
     elif request.method == 'GET':
-        return ("""<b>Available subjects:</b>\n<ul>"""
-                + "\n".join("""<li><a href="%s">%s</a></li>""" % (s, s) for s in db['trace'].distinct('subject'))
-                + """</ul>""")
+        if (CONFIG['allow_external_trace_getting']
+            or (request.remote_addr == '127.0.0.1' and CONFIG['allow_local_trace_getting'])):
+            return ("""<b>Available subjects:</b>\n<ul>"""
+                    + "\n".join("""<li><a href="%s">%s</a></li>""" % (s, s) for s in db['trace'].distinct('subject'))
+                    + """</ul>""")
+        else:
+            abort(401)
     elif request.method == 'HEAD':
-        response = make_response()
-        response.headers['X-Obsel-Count'] = str(db['trace'].count())
-        return response
+        if (CONFIG['allow_external_trace_getting']
+            or (request.remote_addr == '127.0.0.1' and CONFIG['allow_local_trace_getting'])):
+            response = make_response()
+            response.headers['X-Obsel-Count'] = str(db['trace'].count())
+            return response
+        else:
+            abort(401)
 
 @app.route('/trace/<path:info>', methods= [ 'GET', 'HEAD' ])
 def trace_get(info):
+    if (not (CONFIG['allow_external_trace_getting']
+             or (request.remote_addr == '127.0.0.1' and CONFIG['allow_local_trace_getting']))):
+        abort(401)
+        # Useless, but just for the sake of it:
+        return
     info = info.split('/')
     if len(info) == 1 or (len(info) == 2 and info[1] == ''):
         # subject
@@ -161,4 +191,9 @@ def logout():
 app.secret_key = os.urandom(24)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    if CONFIG['enable_debug']:
+        app.run(debug=True)
+    elif CONFIG['allow_external_access']:
+        app.run(debug=False, host='0.0.0.0')
+    else:
+        app.run(debug=False)
