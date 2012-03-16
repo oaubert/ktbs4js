@@ -208,6 +208,8 @@ if __name__ == "__main__":
                       help="""Control trace GET access. Values: none: no trace access; localhost: localhost only; any: any host can access""")
 
     (options, args) = parser.parse_args()
+    if options.enable_debug:
+        options.allow_external_access = False
     CONFIG.update(vars(options))
 
     if CONFIG['enable_debug']:
