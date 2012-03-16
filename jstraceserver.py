@@ -145,11 +145,11 @@ def trace():
 
 @app.route('/trace/<path:info>', methods= [ 'GET', 'HEAD' ])
 def trace_get(info):
-    if (CONFIG['trace_access_control'] != 'any'
-        and (CONFIG['trace_access_control'] == 'localhost' and request.remote_addr != '127.0.0.1')):
+    if CONFIG['trace_access_control'] == 'none':
         abort(401)
-        # Useless, but just for the sake of it:
-        return
+    if (CONFIG['trace_access_control'] == 'localhost' and request.remote_addr != '127.0.0.1'):
+        abort(401)
+
     info = info.split('/')
     if len(info) == 1 or (len(info) == 2 and info[1] == ''):
         # subject
