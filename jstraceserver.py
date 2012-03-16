@@ -212,6 +212,11 @@ if __name__ == "__main__":
         options.allow_external_access = False
     CONFIG.update(vars(options))
 
+    print "Options:"
+    for k, v in CONFIG.iteritems():
+        print " %s: %s" % (k, str(v))
+    print
+
     if CONFIG['enable_debug']:
         app.run(debug=True)
     elif CONFIG['allow_external_access']:
