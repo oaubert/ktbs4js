@@ -13,10 +13,10 @@ How To
 ### Setup it
 
 You need to install : 
-* mongo DB     (http://www.mongodb.org/)
-* python-mongo
+* mongo DB     (http://www.mongodb.org/) [ on Debian/Ubuntu: mongodb-server ]
+* python pymongo module                  [ on Debian/Ubuntu: python-pymongo ]
 * python 2.7   (http://python.org/)
-* flask        (http://flask.pocoo.org/)
+* flask        (http://flask.pocoo.org/) [ on Debian/Ubuntu: python-flask ]
 
 ### Run it
 
