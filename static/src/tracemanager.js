@@ -14,6 +14,7 @@
          // buffer: [],
          // isReady: false,
          // timer: null,
+         // failureCount: 0,
 
          /* Flush buffer */
          flush: function() {
@@ -38,7 +39,9 @@
                      // saves some bytes
                      data = data.replace(/[\/"]/g, function(s){ return s == '/' ? '"' : '/'; });
                      // FIXME: check data length (< 2K is safe)
-                     var request=$('<img/>').attr('src', this.url + 'trace/?data=' + data);
+                     var request=$('<img />').error( function() { this.failureCount += 1; })
+                         .load( function() { this.failureCount = 0; })
+                         .attr('src', this.url + 'trace/?data=' + data);
                  }
                  else
                  {
@@ -52,10 +55,13 @@
                               error: function(jqXHR, textStatus, errorThrown) {
                                   // FIXME: not called for JSONP/crossdomain
                                   console.log("Error when sending buffer:", textStatus);
+                                  this.failureCount += 1;
                               },
                               success: function(data, textStatus, jqXHR) {
                                   // FIXME: parse the returned JSON, and get
                                   // the updated properties (id, uri...) to apply them to temp items
+                                  // Reset failureCount to 0 as soon as there is 1 valid answer
+                                  this.failureCount = 0;
                               }
                             });
                  }
@@ -120,6 +126,7 @@
          this.buffer = [];
          this.isReady = false;
          this.timer = null;
+         this.failureCount = 0;
          /* mode can be either POST or GET */
          if (mode == 'POST' || mode == 'GET')
              this.mode = mode;
