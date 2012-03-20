@@ -2,9 +2,13 @@
  * Modelled Trace API
  */
 (function($) {
-     /*
-      * FIXME: Write proper representation functions (str, json, ...)
-      */
+     // If there are more than MAX_FAILURE_COUNT synchronisation
+     // failures, then disable synchronisation
+     MAX_FAILURE_COUNT = 20;
+
+     // If there are more than MAX_BUFFER_SIZE obsels in the buffer,
+     // then "compress" them as a single "ktbsFullBuffer"
+     MAX_BUFFER_SIZE = 500;
 
      var BufferedService_prototype = {
          /*
@@ -18,12 +22,14 @@
 
          /* Flush buffer */
          flush: function() {
-             // FIXME: should add a counter to avoid starving the sync
-             // process in case of too many generated obsels.
              // FIXME: add mutex on this.buffer
              if (! this.isReady)
              {
                  if (window.console) window.console.log("Sync service not ready");
+             } else if (this.failureCount > MAX_FAILURE_COUNT)
+             {
+                 // Disable synchronisation
+                 this.set_sync_mode('none');
              } else if (this.buffer.length) {
                  var temp = this.buffer;
                  this.buffer = [];
@@ -53,13 +59,10 @@
                               // Type of the returned data.
                               dataType: "html",
                               error: function(jqXHR, textStatus, errorThrown) {
-                                  // FIXME: not called for JSONP/crossdomain
                                   if (window.console) window.console.log("Error when sending buffer:", textStatus);
                                   this.failureCount += 1;
                               },
                               success: function(data, textStatus, jqXHR) {
-                                  // FIXME: parse the returned JSON, and get
-                                  // the updated properties (id, uri...) to apply them to temp items
                                   // Reset failureCount to 0 as soon as there is 1 valid answer
                                   this.failureCount = 0;
                               }
@@ -84,6 +87,13 @@
 
          /* Enqueue an obsel */
          enqueue: function(obsel) {
+             if (this.buffer.length > MAX_BUFFER_SIZE)
+             {
+                 obsel = new Obsel('ktbsFullBuffer', this.buffer[0].begin,
+                                   this.buffer[this.buffer.length - 1].end, this.buffer[0].subject);
+                 obsel.trace = this.buffer[0].trace;
+                 this.buffer = [];
+             }
              this.buffer.push(obsel);
              if (this.sync_mode === 'sync') {
                  // Immediate sync of the obsel.
@@ -322,7 +332,6 @@
          },
 
          get_obsel_type: function() {
-             /* FIXME: maybe we should return a ObselType object. In the meantime, return the URI */
              return this.type;
          },
          get_begin: function() {
