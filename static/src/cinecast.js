@@ -5,6 +5,14 @@ $(window).load(function() {
                    trace_cinecast.trace('SiteNavigate', { userid: userinfo ? userinfo.id : "anonymous",
                                                           currenturl: document.URL,
                                                           oldurl: document.referrer });
+
+                   /* Autres sondes à implémenter:
+                    * - UserLogin(userid, currenturl);
+                    * - DoSearch(userid, currenturl, expression)
+                    * - (AnnotationCreate(userid, currenturl, annotationid) -> dérivable du mining des données)
+                    * - CommentCreate(userid, currenturl, annotationid, commenturl)
+                    * - AnnotationShare(userid, currenturl, annotationid, service)
+                    */
                    /*
                    $('#b').bind('mouseover', function () { tr.trace('MouseOver', {widget: this.id}) } )
                        .bind('mouseout', function () { tr.trace('MouseOut', {widget: this.id}) } )
