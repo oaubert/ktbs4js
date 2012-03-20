@@ -435,9 +435,12 @@
                  "@i": this.id,
                  "@t": (this.trace.shorthands.hasOwnProperty(this.type) ? this.trace.shorthands[this.type] : this.type),
                  "@b": this.begin,
-                 "@e": this.end,
                  "@s": this.subject
              };
+             // Store duration (to save some bytes) and only if it is non-null
+             if (this.begin !== this.end)
+                 r["@d"] = this.end - this.begin;
+
              for (var prop in this.attributes) {
                  if (this.hasOwnProperty(prop))
                  {

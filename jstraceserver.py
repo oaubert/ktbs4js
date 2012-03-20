@@ -19,7 +19,8 @@ VALUE_TABLE = {
     '@i': '@id',
     '@t': '@type',
     '@b': 'begin',
-    '@e': 'end',
+    # Note: in compact mode, @d is in fact the duration (end - begin)
+    '@d': 'end',
     '@s': 'subject',
 }
 
@@ -111,6 +112,11 @@ def trace():
                 # Replace keys with matching values
                 obsels = [ dict((VALUE_TABLE.get(k, k), v) for k, v in o.iteritems() )
                            for o in json.loads(data) ]
+                # Decode optional relative ends: if end is not
+                # present, then it is the same as begin. If present,
+                # it is encoded as duration.
+                for o in obsels:
+                    o['end'] = o.get('end', 0) + o['begin']
             else:
                 obsels = json.loads(data)
         for obsel in obsels:
