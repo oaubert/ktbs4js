@@ -23,7 +23,7 @@
              // FIXME: add mutex on this.buffer
              if (! this.isReady)
              {
-                 console.log("Sync service not ready");
+                 if (console) console.log("Sync service not ready");
              } else if (this.buffer.length) {
                  var temp = this.buffer;
                  this.buffer = [];
@@ -54,7 +54,7 @@
                               dataType: "html",
                               error: function(jqXHR, textStatus, errorThrown) {
                                   // FIXME: not called for JSONP/crossdomain
-                                  console.log("Error when sending buffer:", textStatus);
+                                  if (console) console.log("Error when sending buffer:", textStatus);
                                   this.failureCount += 1;
                               },
                               success: function(data, textStatus, jqXHR) {
@@ -68,16 +68,33 @@
              }
          },
 
+         /* Sync mode: delayed, sync (immediate sync), none (no
+          * synchronisation with server, the trace has to be explicitly saved
+          * if needed */
+         set_sync_mode: function(mode) {
+             this.sync_mode = mode;
+             if (! this.isReady && mode !== "none")
+                 this.init();
+             if (mode == 'delayed') {
+                 this.syncservice.start_timer();
+             } else {
+                 this.syncservice.stop_timer();
+             }
+         },
+
          /* Enqueue an obsel */
          enqueue: function(obsel) {
              this.buffer.push(obsel);
+             if (this.sync_mode === 'sync') {
+                 // Immediate sync of the obsel.
+                 this.flush();
+             }
          },
 
          start_timer: function() {
              var self = this;
              if (this.timer === null) {
                  this.timer = window.setInterval(function() {
-                                                     console.log("Flushing timeout");
                                                      self.flush();
                                                  }, this.timeOut);
              }
@@ -127,6 +144,8 @@
          this.isReady = false;
          this.timer = null;
          this.failureCount = 0;
+         // sync_mode is either "none", "sync" or "buffered"
+         this.sync_mode = "none";
          /* mode can be either POST or GET */
          if (mode == 'POST' || mode == 'GET')
              this.mode = mode;
@@ -144,7 +163,6 @@
          obsels: [],
          /* Trace URI */
          uri: "",
-         sync_mode: "none",
          default_subject: "",
          /* baseuri is used as the base URI to resolve relative
           * attribute-type names in obsels. Strictly speaking, this
@@ -166,16 +184,8 @@
           * synchronisation with server, the trace has to be explicitly saved
           * if needed */
          set_sync_mode: function(mode) {
-             this.sync_mode = mode;
-             if (this.syncservice != null) {
-                 if (mode !== 'none') {
-                     this.syncservice.init();
-                 }
-                 if (mode == 'delayed') {
-                     this.syncservice.start_timer();
-                 } else {
-                     this.syncservice.stop_timer();
-                 }
+             if (this.syncservice !== null) {
+                 this.syncservice.set_sync_mode(mode);
              }
          },
 
@@ -244,13 +254,8 @@
              }
              o.trace = this;
              this.obsels.push(o);
-             if (this.syncservice !== null && this.sync_mode != 'none') {
+             if (this.syncservice !== null)
                  this.syncservice.enqueue(o);
-                 if (this.sync_mode === 'sync') {
-                     // Immediate sync of the obsel.
-                     this.syncservice.flush();
-                 }
-             }
          },
 
 	     obselProbe : function(element, bindingEvent, ObselFunction) {
@@ -492,12 +497,14 @@
           */
          init_trace: function(name, params)
          {
-             console.log("init_trace", params);
+             if (console) console.log("init_trace", params);
              url = params.url ? params.url : "";
              requestmode = params.requestmode ? params.requestmode : "POST";
              syncmode = params.syncmode ? params.syncmode : "none";
+             default_subject = params.default_subject ? params.default_subject : "default";
              var t = new Trace(url, requestmode);
              t.set_sync_mode(syncmode);
+             t.set_default_subject(default_subject);
              this.traces[name] = t;
              return t;
          }
