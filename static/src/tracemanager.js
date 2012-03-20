@@ -76,9 +76,9 @@
              if (! this.isReady && mode !== "none")
                  this.init();
              if (mode == 'delayed') {
-                 this.syncservice.start_timer();
+                 this.start_timer();
              } else {
-                 this.syncservice.stop_timer();
+                 this.stop_timer();
              }
          },
 
