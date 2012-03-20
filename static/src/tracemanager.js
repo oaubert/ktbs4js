@@ -1,7 +1,7 @@
 /*
  * Modelled Trace API
  */
-(function() {
+(function($) {
      /*
       * FIXME: Write proper representation functions (str, json, ...)
       */
@@ -23,7 +23,7 @@
              // FIXME: add mutex on this.buffer
              if (! this.isReady)
              {
-                 if (console) console.log("Sync service not ready");
+                 if (window.console) window.console.log("Sync service not ready");
              } else if (this.buffer.length) {
                  var temp = this.buffer;
                  this.buffer = [];
@@ -54,7 +54,7 @@
                               dataType: "html",
                               error: function(jqXHR, textStatus, errorThrown) {
                                   // FIXME: not called for JSONP/crossdomain
-                                  if (console) console.log("Error when sending buffer:", textStatus);
+                                  if (window.console) window.console.log("Error when sending buffer:", textStatus);
                                   this.failureCount += 1;
                               },
                               success: function(data, textStatus, jqXHR) {
@@ -338,7 +338,8 @@
          list_attribute_types: function() {
              var result = [];
              for (var prop in this.attributes) {
-                 result.push(prop);
+                 if (this.hasOwnProperty(prop))
+                     result.push(prop);
              }
              /* FIXME: we return URIs here instead of AttributeType elements */
              return result;
@@ -410,7 +411,8 @@
                  "subject": this.subject
              };
              for (var prop in this.attributes) {
-                 r[prop] = this.attributes[prop];
+                 if (this.hasOwnProperty(prop))
+                     r[prop] = this.attributes[prop];
              }
              return r;
          },
@@ -422,15 +424,17 @@
          toCompactJSON: function() {
              var r = {
                  "@i": this.id,
-                 "@t": (this.trace.shorthands.hasOwnProperty(this.type)
-                        ? this.trace.shorthands[this.type] : this.type),
+                 "@t": (this.trace.shorthands.hasOwnProperty(this.type) ? this.trace.shorthands[this.type] : this.type),
                  "@b": this.begin,
                  "@e": this.end,
                  "@s": this.subject
              };
              for (var prop in this.attributes) {
-                 var v = this.attributes[prop];
-                 r[prop] = this.trace.shorthands.hasOwnProperty(v) ? this.trace.shorthands[v] : v;
+                 if (this.hasOwnProperty(prop))
+                 {
+                     var v = this.attributes[prop];
+                     r[prop] = this.trace.shorthands.hasOwnProperty(v) ? this.trace.shorthands[v] : v;
+                 }
              }
              return r;
          },
@@ -473,7 +477,7 @@
           */
          init_trace: function(name, params)
          {
-             if (console) console.log("init_trace", params);
+             if (window.console) window.console.log("init_trace", params);
              url = params.url ? params.url : "";
              requestmode = params.requestmode ? params.requestmode : "POST";
              syncmode = params.syncmode ? params.syncmode : "none";
@@ -494,4 +498,4 @@
      var tracemanager  = new TraceManager();
      /* FIXME: properly use require.js feature. This will do for debugging in the meantime */
      window.tracemanager = tracemanager;
- })();
+ })(jQuery);
