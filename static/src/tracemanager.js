@@ -35,9 +35,9 @@
                      // prefixing it with c
                      var data = 'c' + JSON.stringify(temp.map(function (o) { return o.toCompactJSON(); }));
                      // Swap " (very frequent, which will be
-                     // serialized into %22) and / (rather rare), this
+                     // serialized into %22) and ; (rather rare), this
                      // saves some bytes
-                     data = data.replace(/[\/"]/g, function(s){ return s == '/' ? '"' : '/'; });
+                     data = data.replace(/[;"]/g, function(s){ return s == ';' ? '"' : ';'; });
                      // FIXME: check data length (< 2K is safe)
                      var request=$('<img />').error( function() { this.failureCount += 1; })
                          .load( function() { this.failureCount = 0; })
