@@ -1,7 +1,8 @@
 /*
  * Modelled Trace API
  */
-(function($) {
+/* FIXME: properly use require.js feature. This will do for debugging in the meantime */
+window.tracemanager = (function($) {
      // If there are more than MAX_FAILURE_COUNT synchronisation
      // failures, then disable synchronisation
      MAX_FAILURE_COUNT = 20;
@@ -508,6 +509,5 @@
      TraceManager.prototype = TraceManager_prototype;
 
      var tracemanager  = new TraceManager();
-     /* FIXME: properly use require.js feature. This will do for debugging in the meantime */
-     window.tracemanager = tracemanager;
+     return tracemanager;
  })(jQuery);
