@@ -117,6 +117,8 @@ def trace():
                 # it is encoded as duration.
                 for o in obsels:
                     o['end'] = o.get('end', 0) + o['begin']
+                    if not 'id' in o:
+                        o['id'] = ""
             else:
                 obsels = json.loads(data)
         for obsel in obsels:
