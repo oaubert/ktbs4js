@@ -348,7 +348,7 @@ window.tracemanager = (function($) {
          list_attribute_types: function() {
              var result = [];
              for (var prop in this.attributes) {
-                 if (this.hasOwnProperty(prop))
+                 if (this.attributes.hasOwnProperty(prop))
                      result.push(prop);
              }
              /* FIXME: we return URIs here instead of AttributeType elements */
@@ -421,7 +421,7 @@ window.tracemanager = (function($) {
                  "subject": this.subject
              };
              for (var prop in this.attributes) {
-                 if (this.hasOwnProperty(prop))
+                 if (this.attributes.hasOwnProperty(prop))
                      r[prop] = this.attributes[prop];
              }
              return r;
