@@ -1,9 +1,9 @@
 $(window).load(function() {
                    trace_cinecast = window.tracemanager.init_trace("festival", { url: "http://traces.advene.org:5000/",
                                                                                  requestmode: 'GET',
-                                                                                 syncmode: 'sync' });
-                   trace_cinecast.trace('SiteNavigate', { userid: userinfo ? userinfo.id : "anonymous",
-                                                          currenturl: document.URL,
+                                                                                 syncmode: 'sync',
+                                                                                 default_subject: userInfo ? userInfo.id : 'anonymous' });
+                   trace_cinecast.trace('SiteNavigate', { currenturl: document.URL,
                                                           oldurl: document.referrer });
 
                    /* Autres sondes à implémenter:
