@@ -443,7 +443,7 @@ window.tracemanager = (function($) {
                  r["@d"] = this.end - this.begin;
 
              for (var prop in this.attributes) {
-                 if (this.hasOwnProperty(prop))
+                 if (this.attributes.hasOwnProperty(prop))
                  {
                      var v = this.attributes[prop];
                      r[prop] = this.trace.shorthands.hasOwnProperty(v) ? this.trace.shorthands[v] : v;
