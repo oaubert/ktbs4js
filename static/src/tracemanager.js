@@ -433,7 +433,6 @@ window.tracemanager = (function($) {
           */
          toCompactJSON: function() {
              var r = {
-                 "@i": this.id,
                  "@t": (this.trace.shorthands.hasOwnProperty(this.type) ? this.trace.shorthands[this.type] : this.type),
                  "@b": this.begin,
                  "@s": this.subject
@@ -441,6 +440,10 @@ window.tracemanager = (function($) {
              // Store duration (to save some bytes) and only if it is non-null
              if (this.begin !== this.end)
                  r["@d"] = this.end - this.begin;
+
+             // Store id only if != ""
+             if (this.id !== "")
+                 r["@i"] = this.id;
 
              for (var prop in this.attributes) {
                  if (this.attributes.hasOwnProperty(prop))
