@@ -1,8 +1,11 @@
 $(window).load(function() {
+                   // Initialisation of default_subject is
+                   // VodKaster-specific: other partners should modify
+                   // the default_subject initialisation to get user-id
                    trace_cinecast = window.tracemanager.init_trace("festival", { url: "http://traces.advene.org:5000/",
                                                                                  requestmode: 'GET',
                                                                                  syncmode: 'sync',
-                                                                                 default_subject: userInfo ? userInfo.id : 'anonymous' });
+                                                                                 default_subject: typedef(userInfo) != 'undefined' ? userInfo.id : 'anonymous' });
                    trace_cinecast.trace('SiteNavigate', { currenturl: document.URL,
                                                           oldurl: document.referrer });
 
