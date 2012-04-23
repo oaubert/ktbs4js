@@ -2,14 +2,14 @@ $(window).load(function() {
                    trace_cinecast = window.tracemanager.init_trace("festival", { url: "http://traces.advene.org:5000/",
                                                                                  requestmode: 'GET',
                                                                                  syncmode: 'sync' });
-                   trace_cinecast.trace('SiteNavigate', { userid: userinfo ? userinfo.id : "anonymous",
+                   trace_cinecast.trace('SiteNavigate', { userid: typeof(userinfo) != "undefined" ? userinfo.id : "anonymous",
                                                           currenturl: document.URL,
                                                           oldurl: document.referrer });
 
-                   /* Autres sondes à implémenter:
+                   /* Autres sondes ï¿½ implï¿½menter:
                     * - UserLogin(userid, currenturl);
                     * - DoSearch(userid, currenturl, expression)
-                    * - (AnnotationCreate(userid, currenturl, annotationid) -> dérivable du mining des données)
+                    * - (AnnotationCreate(userid, currenturl, annotationid) -> dï¿½rivable du mining des donnï¿½es)
                     * - CommentCreate(userid, currenturl, annotationid, commenturl)
                     * - AnnotationShare(userid, currenturl, annotationid, service)
                     */
