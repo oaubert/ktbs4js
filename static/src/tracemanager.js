@@ -75,10 +75,10 @@ window.tracemanager = (function($) {
          /* Sync mode: delayed, sync (immediate sync), none (no
           * synchronisation with server, the trace has to be explicitly saved
           * if needed */
-         set_sync_mode: function(mode) {
+         set_sync_mode: function(mode, default_subject) {
              this.sync_mode = mode;
              if (! this.isReady && mode !== "none")
-                 this.init();
+                 this.init(default_subject);
              if (mode == 'delayed') {
                  this.start_timer();
              } else {
@@ -121,14 +121,16 @@ window.tracemanager = (function($) {
          /*
           * Initialize the sync service
           */
-         init: function() {
+         init: function(default_subject) {
              var self = this;
              if (this.isReady)
                  /* Already initialized */
                  return;
+             if (typeof default_subject === 'undefined')
+                 default_subject = 'anonymous';
              if (this.mode == 'GET')
              {
-                 var request=$('<img/>').attr('src', this.url + 'login?userinfo={"name":"ktbs4js"}');
+                 var request=$('<img/>').attr('src', this.url + 'login?userinfo={"default_subject": "' + default_subject + '"}');
                  // Do not wait for the return, assume it is
                  // initialized. This assumption will not work anymore
                  // if login returns some necessary information
@@ -138,7 +140,7 @@ window.tracemanager = (function($) {
              {
                  $.ajax({ url: this.url + 'login',
                           type: 'POST',
-                          data: 'userinfo={"name":"ktbs4js"}',
+                          data: 'userinfo={"default_subject":"' + default_subject + '"}',
                           success: function(data, textStatus, jqXHR) {
                               self.isReady = true;
                               if (self.buffer.length) {
@@ -196,7 +198,7 @@ window.tracemanager = (function($) {
           * if needed */
          set_sync_mode: function(mode) {
              if (this.syncservice !== null) {
-                 this.syncservice.set_sync_mode(mode);
+                 this.syncservice.set_sync_mode(mode, this.default_subject);
              }
          },
 
@@ -249,6 +251,9 @@ window.tracemanager = (function($) {
          },
 
          set_default_subject: function(subject) {
+             // FIXME: if we call this method after the sync_service
+             // init method, then the default_subject will not be
+             // consistent anymore. Maybe we should then call init() again?
              this.default_subject = subject;
          },
 
@@ -499,8 +504,8 @@ window.tracemanager = (function($) {
              syncmode = params.syncmode ? params.syncmode : "none";
              default_subject = params.default_subject ? params.default_subject : "default";
              var t = new Trace(url, requestmode);
-             t.set_sync_mode(syncmode);
              t.set_default_subject(default_subject);
+             t.set_sync_mode(syncmode);
              this.traces[name] = t;
              return t;
          }
