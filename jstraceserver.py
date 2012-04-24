@@ -108,7 +108,7 @@ def trace():
             if data.startswith('c['):
                 # Data mangling here. Pseudo compression is involved.
                 # Swap " and ;. Note that we use unicode.translate, so we pass a dict mapping.
-                data = data[1:].translate({ord(u'"'): u';', ord(u';'):u'"'})
+                data = data[1:].translate({ord(u'"'): u';', ord(u';'):u'"'}).replace('%23', '#')
                 # Replace keys with matching values
                 obsels = [ dict((VALUE_TABLE.get(k, k), v) for k, v in o.iteritems() )
                            for o in json.loads(data) ]
