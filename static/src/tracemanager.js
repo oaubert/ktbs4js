@@ -440,7 +440,6 @@ window.tracemanager = (function($) {
              var r = {
                  "@t": (this.trace.shorthands.hasOwnProperty(this.type) ? this.trace.shorthands[this.type] : this.type),
                  "@b": this.begin,
-                 "@s": this.subject
              };
              // Transmit subject only if different from default_subject
              if (this.subject !== this.trace.default_subject)
