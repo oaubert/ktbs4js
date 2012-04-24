@@ -10,11 +10,11 @@ $(window).load(function() {
                                                           oldurl: document.referrer });
 
                    /* Autres sondes a implementer:
-                    * - UserLogin(userid, currenturl);
-                    * - DoSearch(userid, currenturl, expression)
-                    * - (AnnotationCreate(userid, currenturl, annotationid) -> derivable du mining des donnees)
-                    * - CommentCreate(userid, currenturl, annotationid, commenturl)
-                    * - AnnotationShare(userid, currenturl, annotationid, service)
+                    * - UserLogin(currenturl);
+                    * - DoSearch(currenturl, expression)
+                    * - (AnnotationCreate(currenturl, annotationid) -> derivable du mining des donnees)
+                    * - CommentCreate(currenturl, annotationid, commenturl)
+                    * - AnnotationShare(currenturl, annotationid, service)
                     */
                    /*
                    $('#b').bind('mouseover', function () { tr.trace('MouseOver', {widget: this.id}) } )
