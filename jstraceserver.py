@@ -140,7 +140,7 @@ def trace():
         if (CONFIG['trace_access_control'] == 'any'
             or (CONFIG['trace_access_control'] == 'localhost' and request.remote_addr == '127.0.0.1')):
             return ("""<b>Available subjects:</b>\n<ul>"""
-                    + "\n".join("""<li><a href="%s">%s</a></li>""" % (s, s) for s in db['trace'].distinct('subject'))
+                    + "\n".join("""<li><a href="%s">%s</a> (%d)</li>""" % (s, s, db['trace'].find({'subject': s}).count()) for s in db['trace'].distinct('subject'))
                     + """</ul>""")
         else:
             abort(401)
