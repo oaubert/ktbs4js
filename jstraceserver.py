@@ -70,11 +70,11 @@ def login():
         # 'userinfo' is either a (GET) named param, or a (POST) form
         # field, whose value contains JSON data with information about
         # the user
-        params = request.values.get('userinfo', "{'name':'Anonymous'}")
+        params = request.values.get('userinfo', "{'default_subject':'anonymous'}")
 
         if 'userinfo' in session:
             # session was already initialized. Update its information.
-            db['userinfo'].update( {"id", session['userinfo']['id']},
+            db['userinfo'].update( {"id": session['userinfo']['id']},
                                    json.loads(params) )
         else:
             session['userinfo'] = json.loads(params)
@@ -119,6 +119,8 @@ def trace():
                     o['end'] = o.get('end', 0) + o['begin']
                     if not 'id' in o:
                         o['id'] = ""
+                    if not 'subject' in o:
+                        o['subject'] = session['userinfo'].get('default_subject', "anonymous")
             else:
                 obsels = json.loads(data)
         for obsel in obsels:
