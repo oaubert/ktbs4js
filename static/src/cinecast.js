@@ -9,12 +9,12 @@ $(window).load(function() {
                    trace_cinecast.trace('SiteNavigate', { currenturl: document.URL,
                                                           oldurl: document.referrer });
 
-                   /* Autres sondes � implementer:
-                    * - UserLogin(userid, currenturl);
-                    * - DoSearch(userid, currenturl, expression)
-                    * - (AnnotationCreate(userid, currenturl, annotationid) -> d�rivable du mining des donnees)
-                    * - CommentCreate(userid, currenturl, annotationid, commenturl)
-                    * - AnnotationShare(userid, currenturl, annotationid, service)
+                   /* Autres sondes a implementer:
+                    * - UserLogin(currenturl);
+                    * - DoSearch(currenturl, expression)
+                    * - (AnnotationCreate(currenturl, annotationid) -> derivable du mining des donnees)
+                    * - CommentCreate(currenturl, annotationid, commenturl)
+                    * - AnnotationShare(currenturl, annotationid, service)
                     */
                    /*
                    $('#b').bind('mouseover', function () { tr.trace('MouseOver', {widget: this.id}) } )
