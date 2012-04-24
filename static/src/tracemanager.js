@@ -442,6 +442,10 @@ window.tracemanager = (function($) {
                  "@b": this.begin,
                  "@s": this.subject
              };
+             // Transmit subject only if different from default_subject
+             if (this.subject !== this.trace.default_subject)
+                 r["@s"] = this.subject;
+
              // Store duration (to save some bytes) and only if it is non-null
              if (this.begin !== this.end)
                  r["@d"] = this.end - this.begin;
