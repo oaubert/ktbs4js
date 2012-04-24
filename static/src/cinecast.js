@@ -9,10 +9,10 @@ $(window).load(function() {
                    trace_cinecast.trace('SiteNavigate', { currenturl: document.URL,
                                                           oldurl: document.referrer });
 
-                   /* Autres sondes � implementer:
+                   /* Autres sondes a implementer:
                     * - UserLogin(userid, currenturl);
                     * - DoSearch(userid, currenturl, expression)
-                    * - (AnnotationCreate(userid, currenturl, annotationid) -> d�rivable du mining des donnees)
+                    * - (AnnotationCreate(userid, currenturl, annotationid) -> derivable du mining des donnees)
                     * - CommentCreate(userid, currenturl, annotationid, commenturl)
                     * - AnnotationShare(userid, currenturl, annotationid, service)
                     */
