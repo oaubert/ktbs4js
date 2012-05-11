@@ -21,6 +21,9 @@ import os
 import json
 import bson
 import uuid
+import re
+import datetime
+import time
 from optparse import OptionParser
 from flask import Flask, Response
 from flask import session, request, redirect, url_for, current_app, make_response, abort
@@ -101,8 +104,8 @@ def login():
         app.logger.debug("Logged in as " + session['userinfo']['id'])
     return redirect(url_for('index'))
 
-def iter_obsels(**kwd):
-    for o in db['trace'].find(kwd):
+def iter_obsels(cursor):
+    for o in cursor:
         o['@id'] = o['_id']
         del o['_id']
         del o['_serverid']
@@ -165,11 +168,42 @@ def trace():
         if (CONFIG['trace_access_control'] == 'any'
             or (CONFIG['trace_access_control'] == 'localhost' and request.remote_addr == '127.0.0.1')):
             response = make_response()
-            response.headers['X-Obsel-Count'] = str(db['trace'].count())
+            count = db['trace'].count()
+            response.headers['Content-Range'] = "items 0-%d/%d" % (max(count - 1, 0), count)
             return response
         else:
             abort(401)
 
+def ts_to_ms(ts, is_ending_timestamp=False):
+    """Convert a timestamp to ms.
+    
+    This function supports a number of formats:
+    * plain numbers (considered as ms)
+    * YYYY/MM/DD
+
+    Its behaviour may differ when considering start or end
+    timestamps. is_ending_timestamp indicates when we are in the
+    latter case.
+    """
+    if ts is None:
+        return None
+
+    try:
+        ms = long(ts)
+    except ValueError:
+        m = re.match('(\d\d\d\d)/(\d\d?)/(\d\d?)', ts)
+        if m is not None:
+            l = [ int(n) for n in m.groups() ]
+            d = datetime.datetime(*l)
+            if is_ending_timestamp:
+                # Ending timestamp: consider begin of following day
+                # instead
+                d = d + datetime.timedelta(1)
+            ms = long(1000 * time.mktime(d.timetuple()))
+        else:
+            ms = None
+    return ms
+    
 @app.route('/trace/<path:info>', methods= [ 'GET', 'HEAD' ])
 def trace_get(info):
     if CONFIG['trace_access_control'] == 'none':
@@ -177,24 +211,96 @@ def trace_get(info):
     if (CONFIG['trace_access_control'] == 'localhost' and request.remote_addr != '127.0.0.1'):
         abort(401)
 
+    # For paging: http://stackoverflow.com/questions/5049992/mongodb-paging
+    # Parameters: page / pageSize or from=timestamp / to=timestamp
+    # In the first case (page), the returned Content-Range will indicate 
+    #  items start-end/total
+    # In the second case (from/to), the returned Content-Range will indicate
+    #  items 0-(count-1)/total
+    # where total is the total number of obsels in the given subject's trace
+    # and count is the number of items matching the request
+        
+    # TODO: Find a way to return a summarized representation if interval is too large.
+    from_ts = ts_to_ms(request.values.get('from', None))
+    to_ts = ts_to_ms(request.values.get('to', None), True)
+    page_number = request.values.get('page', None)
+    if page_number is not None:
+        page_number = long(page_number)
+    page_size = request.values.get('pageSize', 100)
+    if page_size is not None:
+        page_size = long(page_size)
     info = info.split('/')
     if len(info) == 1 or (len(info) == 2 and info[1] == ''):
         # subject
+        total = db['trace'].find({'subject': info[0]}).count()
+        if page_number is not None:
+            # User requested a specific page number.
+            i = page_number * page_size
+            if i > total:
+                # Requested Range Not Satisfiable
+                abort(416)
+            else:
+                if request.method == 'HEAD':
+                    response = make_response()
+                    end = min(i + page_size, total)
+                    response.headers['Content-Range'] = "items %d-%d/%d" % (i, max(end - 1, 0), total)
+                    return response
+                else:
+                    # Note: if we use the common codepath (just
+                    # setting cursor), then the Content-Range will
+                    # start at 0 -> wrong info. So we have to generate
+                    # the response here
+                    cursor = db['trace'].find({'subject': info[0]}).skip(i).limit(page_number)
+                    count = cursor.count()
+                    response = current_app.response_class( json.dumps({
+                                "@context": [
+                                    "http://liris.cnrs.fr/silex/2011/ktbs-jsonld-context",
+                                    #{ "m": "http://localhost:8001/base1/model1#" }
+                                    ],
+                                "@id": ".",
+                                "hasObselList": "",
+                                'obsels': list(iter_obsels(cursor)) },
+                                                                  indent=None if request.is_xhr else 2,
+                                                                  cls=MongoEncoder),
+                                                           mimetype='application/json')
+                    response.headers['Content-Range'] = "items %d-%d/%d" % (i, i + count, total)
+                    return response
+        elif from_ts is not None:
+            if to_ts is None:
+                # Only > from_ts
+                cursor = db['trace'].find({ 'subject': info[0],
+                                            'begin': { '$gt': from_ts } })
+            else:
+                cursor = db['trace'].find({ 'subject': info[0],
+                                            'begin': { '$gt': from_ts },
+                                            'end': { '$lt': to_ts } })
+        else:
+            # No restriction. Count all obsels.
+            cursor = db['trace'].find({ 'subject': info[0] })
+
+        count = cursor.count()
         if request.method == 'HEAD':
             response = make_response()
-            response.headers['X-Obsel-Count'] = str(db['trace'].find({'subject': info[0]}).count())
+            response.headers['Content-Range'] = "items 0-%d/%d" % (max(count - 1, 0), total)
             return response
-        return current_app.response_class( json.dumps({
-                    "@context": [
-                        "http://liris.cnrs.fr/silex/2011/ktbs-jsonld-context",
-                        #{ "m": "http://localhost:8001/base1/model1#" }
-                    ],
-                    "@id": ".",
-                    "hasObselList": "",
-                    'obsels': list(iter_obsels(subject=info[0])) },
-                                                      indent=None if request.is_xhr else 2,
-                                                      cls=MongoEncoder),
-                                           mimetype='application/json')
+        else:
+            if count > 2000 and from_ts is None and to_ts is None and page_number is None:
+                # No parameters were specified and the result is too large. Return a 
+                # 413 Request Entity Too Large
+                abort(413)
+            response = current_app.response_class( json.dumps({
+                        "@context": [
+                            "http://liris.cnrs.fr/silex/2011/ktbs-jsonld-context",
+                            #{ "m": "http://localhost:8001/base1/model1#" }
+                            ],
+                        "@id": ".",
+                        "hasObselList": "",
+                        'obsels': list(iter_obsels(cursor)) },
+                                                          indent=None if request.is_xhr else 2,
+                                                          cls=MongoEncoder),
+                                                   mimetype='application/json')
+            response.headers['Content-Range'] = "items 0-%d/%d" % (max(count - 1, 0), total)
+            return response
     elif len(info) == 2:
         # subject, id
         return current_app.response_class( json.dumps({
@@ -204,10 +310,10 @@ def trace_get(info):
                     ],
                     "@id": ".",
                     "hasObselList": "",
-                    'obsels': list(iter_obsels(_id=bson.ObjectId(info[1]))) },
-                                                      indent=None if request.is_xhr else 2,
-                                                      cls=MongoEncoder),
-                                           mimetype='application/json')
+                    'obsels': list(iter_obsels(db['trace'].find( { '_id': bson.ObjectId(info[1]) }))) },
+                                   indent=None if request.is_xhr else 2,
+                                   cls=MongoEncoder),
+                    mimetype='application/json')
     else:
         return "Got info: " + ",".join(info)
 
