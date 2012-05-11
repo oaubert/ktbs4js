@@ -84,24 +84,21 @@ def index():
 
 @app.route('/login', methods = ['GET', 'POST'])
 def login():
-    if 'userinfo' in session and 'name' in session['userinfo']:
-        app.logger.debug("Already logged in")
+    # 'userinfo' is either a (GET) named param, or a (POST) form
+    # field, whose value contains JSON data with information about
+    # the user
+    params = request.values.get('userinfo', "{'default_subject':'anonymous'}")
+
+    if 'userinfo' in session:
+        # session was already initialized. Update its information.
+        db['userinfo'].update( {"id": session['userinfo']['id']},
+                               json.loads(params) )
     else:
-        # 'userinfo' is either a (GET) named param, or a (POST) form
-        # field, whose value contains JSON data with information about
-        # the user
-        params = request.values.get('userinfo', "{'default_subject':'anonymous'}")
-
-        if 'userinfo' in session:
-            # session was already initialized. Update its information.
-            db['userinfo'].update( {"id": session['userinfo']['id']},
-                                   json.loads(params) )
-        else:
-            session['userinfo'] = json.loads(params)
-            session['userinfo'].setdefault('id', str(uuid.uuid1()))
-            db['userinfo'].save(dict(session['userinfo']))
-
-        app.logger.debug("Logged in as " + session['userinfo']['id'])
+        session['userinfo'] = json.loads(params)
+        session['userinfo'].setdefault('id', str(uuid.uuid1()))
+        db['userinfo'].save(dict(session['userinfo']))
+        
+    app.logger.debug("Logged in as " + session['userinfo']['id'])
     return redirect(url_for('index'))
 
 def iter_obsels(cursor):
