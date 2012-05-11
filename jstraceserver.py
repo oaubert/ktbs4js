@@ -148,6 +148,7 @@ def trace():
             db['trace'].save(obsel)
         response = make_response()
         response.headers['X-Obsel-Count'] = str(len(obsels))
+        response.headers['Access-Control-Allow-Origin'] = '*'
         if request.method == 'GET':
             # GET methods are usually used to make cross-site
             # requests, and invoked through a <img> src
@@ -170,6 +171,7 @@ def trace():
             response = make_response()
             count = db['trace'].count()
             response.headers['Content-Range'] = "items 0-%d/%d" % (max(count - 1, 0), count)
+            response.headers['Access-Control-Allow-Origin'] = '*'
             return response
         else:
             abort(401)
@@ -244,6 +246,7 @@ def trace_get(info):
                     response = make_response()
                     end = min(i + page_size, total)
                     response.headers['Content-Range'] = "items %d-%d/%d" % (i, max(end - 1, 0), total)
+                    response.headers['Access-Control-Allow-Origin'] = '*'
                     return response
                 else:
                     # Note: if we use the common codepath (just
