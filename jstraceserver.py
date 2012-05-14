@@ -93,6 +93,7 @@ def login():
         # session was already initialized. Update its information.
         db['userinfo'].update( {"id": session['userinfo']['id']},
                                json.loads(params) )
+        session['userinfo'].update(json.loads(params))
     else:
         session['userinfo'] = json.loads(params)
         session['userinfo'].setdefault('id', str(uuid.uuid1()))
