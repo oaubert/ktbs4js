@@ -94,11 +94,12 @@ def login():
         db['userinfo'].update( {"id": session['userinfo']['id']},
                                json.loads(params) )
         session['userinfo'].update(json.loads(params))
+        session.modified = True
     else:
         session['userinfo'] = json.loads(params)
         session['userinfo'].setdefault('id', str(uuid.uuid1()))
         db['userinfo'].save(dict(session['userinfo']))
-        
+        session.modified = True
 
     # Current time in ms. It may be different from times sent by
     # client, because of different timezones or even clock skew. It is
