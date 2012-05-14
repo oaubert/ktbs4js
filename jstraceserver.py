@@ -87,7 +87,7 @@ def login():
     # 'userinfo' is either a (GET) named param, or a (POST) form
     # field, whose value contains JSON data with information about
     # the user
-    params = request.values.get('userinfo', "{'default_subject':'anonymous'}")
+    params = request.values.get('userinfo', '{"default_subject":"anonymous"}')
 
     if 'userinfo' in session:
         # session was already initialized. Update its information.
