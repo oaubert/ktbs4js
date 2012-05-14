@@ -99,6 +99,17 @@ def login():
         session['userinfo'].setdefault('id', str(uuid.uuid1()))
         db['userinfo'].save(dict(session['userinfo']))
         
+
+    # Current time in ms. It may be different from times sent by
+    # client, because of different timezones or even clock skew. It is
+    # indicative.
+    t = long(time.time() * 1000)
+    db['trace'].save({ '_serverid': session['userinfo'].get('id', ""),
+                       '@type': 'Login',
+                       'begin': t,
+                       'end': t,
+                       'subject': session['userinfo'].get('default_subject', "anonymous")
+                       })
     app.logger.debug("Logged in as " + session['userinfo']['id'])
     return redirect(url_for('index'))
 
