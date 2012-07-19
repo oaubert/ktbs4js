@@ -91,9 +91,10 @@ def login():
 
     if 'userinfo' in session:
         # session was already initialized. Update its information.
-        db['userinfo'].update( {"id": session['userinfo']['id']},
-                               json.loads(params) )
-        session['userinfo'].update(json.loads(params))
+        d = json.loads(params)
+        d['id'] = session['userinfo']['id']
+        db['userinfo'].update( {"id": session['userinfo']['id']}, d)
+        session['userinfo'].update(d)
         session.modified = True
     else:
         session['userinfo'] = json.loads(params)
