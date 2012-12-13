@@ -58,6 +58,8 @@ CONFIG = {
     'trace_access_control': 'none',
 }
 
+MAX_DEFAULT_OBSEL_COUNT = 1000
+
 connection = pymongo.Connection("localhost", 27017)
 db = connection[DB]
 
@@ -171,9 +173,8 @@ def trace():
     elif request.method == 'GET':
         if (CONFIG['trace_access_control'] == 'any'
             or (CONFIG['trace_access_control'] == 'localhost' and request.remote_addr == '127.0.0.1')):
-            return ("""<b>Available subjects:</b>\n<ul>"""
-                    + "\n".join("""<li><a href="%s">%s</a> (%d)</li>""" % (s, s, db['trace'].find({'subject': s}).count()) for s in db['trace'].distinct('subject'))
-                    + """</ul>""")
+            detail = request.values.get('detail', False)
+            return "\n".join( generate_trace_index_document(detail=detail) )
         else:
             abort(401)
     elif request.method == 'HEAD':
@@ -187,6 +188,37 @@ def trace():
         else:
             abort(401)
 
+def generate_trace_index_document(detail=False):
+    yield """<b>Available subjects:</b>\n<ul>"""
+    for s in db['trace'].distinct('subject'):
+        if detail:
+            # Too costly to compute by default. Could be an AJAX method.
+            count = db['trace'].find({'subject': s}).count()
+            if count < MAX_DEFAULT_OBSEL_COUNT:
+                yield """<li><a href="%s">%s</a> (%d)</li>""" % (s, s, count)
+            else:
+                # More than MAX_DEFAULT_OBSEL_COUNT obsels: provide links to day-specific traces
+                yield """<li><a href="%s">%s</a> (%d)""" % (s, s, count)
+                yield """<ul>"""
+                start = min(db['trace'].find({'subject': s}, {'begin': 1}))['begin']
+                t = time.localtime(start / 1000)
+                dt = datetime.datetime(*t[:7])
+                today = dt.today()
+                while dt < today:
+                    begin = long(1000 * time.mktime(dt.timetuple()))
+                    dt = dt + datetime.timedelta(1)
+                    end = long(1000 * time.mktime(dt.timetuple()))
+                    count = db['trace'].find({ 'subject': s,
+                                               'begin': { '$gt': begin },
+                                               'end': { '$lt': end } }).count()
+                    if count > 0:
+                        begindate = str(dt.date())
+                        yield """   <li><a href="%(s)s?from=%(begindate)s&to=%(begindate)s">%(begindate)s</a> (%(count)d items)</li>""" % locals()
+                yield """</ul></li>"""
+        else:
+            yield """<li><a href="%s">%s</a></li>""" % (s, s)            
+    yield """</ul>"""
+    
 def ts_to_ms(ts, is_ending_timestamp=False):
     """Convert a timestamp to ms.
     
@@ -298,7 +330,7 @@ def trace_get(info):
             response.headers['Content-Range'] = "items 0-%d/%d" % (max(count - 1, 0), total)
             return response
         else:
-            if count > 2000 and from_ts is None and to_ts is None and page_number is None:
+            if count > MAX_DEFAULT_OBSEL_COUNT and from_ts is None and to_ts is None and page_number is None:
                 # No parameters were specified and the result is too large. Return a 
                 # 413 Request Entity Too Large
                 abort(413)
