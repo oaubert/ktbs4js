@@ -17,6 +17,9 @@
 "use strict";
 
 (function () {
+    // the line below prevents conflicts in case the page uses another
+    // version of jQuery
+    jQuery.noConflict(true);
     var $ = jQuery;
 
     console.log("Starting test");
