@@ -81,6 +81,9 @@ window.tracemanager = (function ($) {
                 }
             } else if (this.failureCount > MAX_FAILURE_COUNT) {
                 // Disable synchronisation
+                if (window.console) {
+                    window.console.log("Too many failures, disabling synchronisation");
+                }
                 this.set_sync_mode('none');
             } else if (this.buffer.length) {
                 var i, ctype, data, temp = this.buffer;
@@ -106,6 +109,17 @@ window.tracemanager = (function ($) {
                     "turtle": "text/turtle",
                 }[this.format];
 
+                var async;
+                if (arguments.length) {
+                    async = arguments[0];
+                } else {
+                    async = true;
+                }
+
+                if (!async && window.console) {
+                    window.console.log("Flushing synchronously");
+                }
+
                 if (this.mode === 'GET') {
                     // FIXME: check data length (< 2K is safe)
                     data = data.replace(/ \n/g, "+");
@@ -122,6 +136,7 @@ window.tracemanager = (function ($) {
                         url: this.url,
                         type: 'POST',
                         contentType: ctype,
+                        async: async,
                         data: data,
                         processData: false,
                         // Type of the returned data.

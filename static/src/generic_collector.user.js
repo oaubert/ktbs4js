@@ -5,6 +5,7 @@
 // @include     http://*
 // @exclude     http://localhost*
 // @version     1
+// @grant       none
 // @downloadURL https://raw.github.com/pchampin/ktbs4js/master/static/src/generic_collector.user.js
 // @updateURL   https://raw.github.com/pchampin/ktbs4js/master/static/src/generic_collector.user.js
 // @require     https://raw.github.com/pchampin/ktbs4js/master/static/src/jquery.js
@@ -17,15 +18,16 @@
 "use strict";
 
 (function () {
-    // the line below prevents conflicts in case the page uses another
-    // version of jQuery
-    jQuery.noConflict(true);
-    var $ = jQuery;
+    var TRACE_URI = "http://localhost:8001/b/t1/";
+    console.log("Generic collector started on " + TRACE_URI);
 
-    console.log("Starting test");
+    var $ = jQuery;
+    if (typeof($) !== "function") {
+        alert("Generic collector problem: $ = " + $)
+    }
 
     var tr = window.tracemanager.init_trace("test", {
-        url: "http://localhost:8001/b/t1/",
+        url: TRACE_URI,
         requestmode: 'POST', // alternatives: "GET", "POST"
         syncmode: "delayed", // alternatives: "sync", "delayed"
         default_subject: "alice",
@@ -33,17 +35,22 @@
         login: false,
     });
 
+    $(window).unload(function() {
+        var sync = tr.syncservice;
+        sync.flush(false); // flushing asynchronously
+    });
+    
     function getXPath(element) {
         // derived from http://stackoverflow.com/a/3454579/1235487
         while (element && element.nodeType !== 1) {
             element = element.parentNode;
         }
-        if (element === undefined) { return "(undefined)"; }
+        if (typeof(element) === "undefined") { return "(undefined)"; }
         if (element === null) { return "(null)"; }
 
         var xpath = '';
         for (true; element && element.nodeType === 1; element = element.parentNode) {
-            //if (element.id !== undefined) return "#" + element.id;
+            //if (typeof(element.id) !== "undefined") return "#" + element.id;
             var id = ($(element.parentNode)
                       .children(element.tagName)
                       .index(element) + 1);
@@ -58,10 +65,10 @@
         while (element && element.nodeType !== 1) {
             element = element.parentNode;
         }
-        if (element === undefined) { return "(undefined)"; }
+        if (typeof(element) === "undefined") { return "(undefined)"; }
         if (element === null) { return "(null)"; }
 
-        //if (element.id !== undefined) return "#" + element.id;
+        //if (typeof(element.id) !== "undefined") return "#" + element.id;
         var id = ($(element.parentNode)
                   .children(element.tagName)
                   .index(element) + 1);
@@ -76,10 +83,10 @@
         while (element && element.nodeType !== 1) {
             element = element.parentNode;
         }
-        if (element === undefined) { return "(undefined)"; }
+        if (typeof(element) === "undefined") { return "(undefined)"; }
         if (element === null) { return "(null)"; }
 
-        if (element.id !== undefined) { return element.id; }
+        if (typeof(element.id) !== "undefined") { return element.id; }
 
         return "#";
     }
@@ -134,4 +141,3 @@
     };
 
 }());
-
