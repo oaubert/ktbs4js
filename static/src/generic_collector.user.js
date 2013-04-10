@@ -123,21 +123,21 @@
     }
 
 
-    document.onkeypress = function (e) {
+    $(document).keypress(function (e) {
         var attributes = {
             'codeChar': String.fromCharCode(e.which),
         };
         fillCommonAttributes(e, attributes);
         tr.trace('KeyPress', attributes);
-    };
+    });
 
-    document.onclick = function (e) {
+    $(document).click(function (e) {
         var attributes = {
             'x': e.clientX,
             'y': e.clientY,
         };
         fillCommonAttributes(e, attributes);
         tr.trace('MouseEvent', attributes);
-    };
+    });
 
 }());
