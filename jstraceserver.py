@@ -127,7 +127,7 @@ def iter_obsels(cursor):
 @app.route('/trace/', methods= [ 'POST', 'GET', 'HEAD' ])
 def trace():
     if (request.method == 'POST' or
-        (request.method == 'GET' and 'data' in request.values)):
+        (request.method == 'GET' and 'post' in request.values)):
         # Handle posting obsels to the trace
         # FIXME: security issue -must check request.content_length
         if not 'userinfo' in session:
@@ -137,7 +137,7 @@ def trace():
         if request.method == 'POST':
             obsels = request.json
         else:
-            data = request.values['data']
+            data = request.values['post']
             if data.startswith('c['):
                 # Data mangling here. Pseudo compression is involved.
                 # Swap " and ;. Note that we use unicode.translate, so we pass a dict mapping.
