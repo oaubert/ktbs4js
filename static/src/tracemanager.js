@@ -27,6 +27,12 @@ window.tracemanager = (function($) {
      // then "compress" them as a single "ktbsFullBuffer"
      MAX_BUFFER_SIZE = 500;
 
+     var logmsg = function() {
+         if (window.console) {
+             window.console.log.apply(console, [ "ktbs4js" ].concat([].slice.call(arguments)));
+         }
+     };
+
      var BufferedService_prototype = {
          /*
           *  Buffered service for traces
@@ -42,9 +48,10 @@ window.tracemanager = (function($) {
              // FIXME: add mutex on this.buffer
              if (! this.isReady)
              {
-                 if (window.console) window.console.log("Sync service not ready");
+                 logmsg("Sync service not ready");
              } else if (this.failureCount > MAX_FAILURE_COUNT)
              {
+                 logmsg("Too many failures, disabling trace synchronisation");
                  // Disable synchronisation
                  this.set_sync_mode('none');
              } else if (this.buffer.length) {
@@ -76,7 +83,7 @@ window.tracemanager = (function($) {
                               // Type of the returned data.
                               dataType: "html",
                               error: function(jqXHR, textStatus, errorThrown) {
-                                  if (window.console) window.console.log("Error when sending buffer:", textStatus);
+                                  logmsg("Error when sending buffer:", textStatus);
                                   this.failureCount += 1;
                               },
                               success: function(data, textStatus, jqXHR) {
@@ -455,7 +462,7 @@ window.tracemanager = (function($) {
          toCompactJSON: function() {
              var r = {
                  "@t": (this.trace.shorthands.hasOwnProperty(this.type) ? this.trace.shorthands[this.type] : this.type),
-                 "@b": this.begin,
+                 "@b": this.begin
              };
              // Transmit subject only if different from default_subject
              if (this.subject !== this.trace.default_subject)
@@ -517,7 +524,7 @@ window.tracemanager = (function($) {
           */
          init_trace: function(name, params)
          {
-             if (window.console) window.console.log("init_trace", params);
+             logmsg("init_trace", params);
              url = params.url ? params.url : "";
              requestmode = params.requestmode ? params.requestmode : "POST";
              syncmode = params.syncmode ? params.syncmode : "none";
