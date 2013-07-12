@@ -356,7 +356,7 @@ def trace_get(info):
                     ],
                     "@id": ".",
                     "hasObselList": "",
-                    'obsels': list(iter_obsels(db['trace'].find( { '_id': bson.ObjectId(info[1]) }))) },
+                    "obsels": list(iter_obsels(db['trace'].find( { '_id': bson.ObjectId(info[1]) }))) },
                                    indent=None if request.is_xhr else 2,
                                    cls=MongoEncoder),
                     mimetype='application/json')
@@ -368,6 +368,45 @@ def logout():
     session.pop('userinfo', None)
     return redirect(url_for('index'))
 
+def dump_db(args):
+    """Dump all obsels from the database.
+    """
+    cursor = db['trace'].find()
+    count = cursor.count()
+    obsels = iter_obsels(cursor)
+    print """{
+  "@context": [
+     "http://liris.cnrs.fr/silex/2011/ktbs-jsonld-context"
+  ],
+  "@id": ".",
+  "hasObselList": "",
+  "count": %d,
+  "obsels": [""" % count
+
+    # Emulate join behaviour but in a streaming mode
+    try:
+        current = obsels.next()
+    except StopIteration:
+        current = None
+    try:
+        nxt = obsels.next()
+    except StopIteration:
+        nxt = None
+
+    while current is not None:
+        print json.dumps(current,
+                         indent=2,
+                         cls=MongoEncoder) + ("," if nxt is not None else "")
+        current = nxt
+        try:
+            nxt = obsels.next()
+        except StopIteration:
+            nxt = None
+
+    print """]
+}
+"""
+    
 # set the secret key.  keep this really secret:
 app.secret_key = os.urandom(24)
 
@@ -376,6 +415,10 @@ if __name__ == "__main__":
 
     parser.add_option("-d", "--debug", dest="enable_debug", action="store_true",
                       help="Enable debug. This implicitly disallows external access.",
+                      default=False)
+
+    parser.add_option("-D", "--dump", dest="dump_db", action="store_true",
+                      help="Dump database to stdout in JSON format",
                       default=False)
 
     parser.add_option("-e", "--external", dest="allow_external_access", action="store_true",
@@ -391,14 +434,17 @@ if __name__ == "__main__":
         options.allow_external_access = False
     CONFIG.update(vars(options))
 
-    print "Options:"
-    for k, v in CONFIG.iteritems():
-        print " %s: %s" % (k, str(v))
-    print
-
-    if CONFIG['enable_debug']:
-        app.run(debug=True)
-    elif CONFIG['allow_external_access']:
-        app.run(debug=False, host='0.0.0.0')
+    if CONFIG['dump_db']:
+        dump_db(args)
     else:
-        app.run(debug=False)
+        print "Options:"
+        for k, v in CONFIG.iteritems():
+            print " %s: %s" % (k, str(v))
+            print
+
+        if CONFIG['enable_debug']:
+            app.run(debug=True)
+        elif CONFIG['allow_external_access']:
+            app.run(debug=False, host='0.0.0.0')
+        else:
+            app.run(debug=False)
