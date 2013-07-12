@@ -370,17 +370,26 @@ def logout():
     return redirect(url_for('index'))
 
 def dump_stats(args):
-    subjects = db['trace'].distinct('subject')
-    # FIXME: minTimestamp/maxTimestamp should be computed together and
-    # through a mongo map/reduce operation
+    aggr = db['trace'].aggregate( [ 
+            { '$match': { 'begin': { '$ne': 0 } } },
+            { '$group': 
+              { '_id': '$subject', 
+                'min': { '$min': '$begin' },
+                'max': { '$max': '$end' },
+                'obselCount': { '$sum': 1 }
+                } 
+              } 
+            ] )
     stat = OrderedDict( [
             ('obselCount', db['trace'].find().count()),
-            ('subjectCount', len(subjects)),
-            ('minTimestamp', min(db['trace'].find({}, {'begin': 1}))['begin']),
-            ('maxTimestamp', max(db['trace'].find({}, {'begin': 1}))['begin']),
-            ('subjects', [ { 'id': s,
-                             'obselCount': db['trace'].find({'subject': s}).count() }
-                           for s in subjects ])
+            ('subjectCount', len(aggr['result'])),
+            ('minTimestamp', min(r['min'] for r in aggr['result'])),
+            ('maxTimestamp', min(r['max'] for r in aggr['result'])),
+            ('subjects', [ { 'id': s['_id'],
+                             'obselCount': s['obselCount'],
+                             'minTimestamp': s['min'],
+                             'maxTimestamp': s['max'] }
+                           for s in aggr['result'] ])
             ])
     print json.dumps(stat, indent=2)
     
@@ -465,6 +474,10 @@ if __name__ == "__main__":
     if options.enable_debug:
         options.allow_external_access = False
     CONFIG.update(vars(options))
+
+    if args and args[0] == 'shell':
+        import pdb; pdb.set_trace()
+        import sys; sys.exit(0)
 
     if options.dump_stats:
         dump_stats(args)
