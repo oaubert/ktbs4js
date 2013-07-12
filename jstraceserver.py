@@ -216,12 +216,12 @@ def generate_trace_index_document(detail=False):
                         yield """   <li><a href="%(s)s?from=%(begindate)s&to=%(begindate)s">%(begindate)s</a> (%(count)d items)</li>""" % locals()
                 yield """</ul></li>"""
         else:
-            yield """<li><a href="%s">%s</a></li>""" % (s, s)            
+            yield """<li><a href="%s">%s</a></li>""" % (s, s)
     yield """</ul>"""
-    
+
 def ts_to_ms(ts, is_ending_timestamp=False):
     """Convert a timestamp to ms.
-    
+
     This function supports a number of formats:
     * plain numbers (considered as ms)
     * YYYY/MM/DD
@@ -248,7 +248,7 @@ def ts_to_ms(ts, is_ending_timestamp=False):
         else:
             ms = None
     return ms
-    
+
 @app.route('/trace/<path:info>', methods= [ 'GET', 'HEAD' ])
 def trace_get(info):
     if CONFIG['trace_access_control'] == 'none':
@@ -258,13 +258,13 @@ def trace_get(info):
 
     # For paging: http://stackoverflow.com/questions/5049992/mongodb-paging
     # Parameters: page / pageSize or from=timestamp / to=timestamp
-    # In the first case (page), the returned Content-Range will indicate 
+    # In the first case (page), the returned Content-Range will indicate
     #  items start-end/total
     # In the second case (from/to), the returned Content-Range will indicate
     #  items 0-(count-1)/total
     # where total is the total number of obsels in the given subject's trace
     # and count is the number of items matching the request
-        
+
     # TODO: Find a way to return a summarized representation if interval is too large.
     from_ts = ts_to_ms(request.values.get('from', None))
     to_ts = ts_to_ms(request.values.get('to', None), True)
@@ -331,7 +331,7 @@ def trace_get(info):
             return response
         else:
             if count > MAX_DEFAULT_OBSEL_COUNT and from_ts is None and to_ts is None and page_number is None:
-                # No parameters were specified and the result is too large. Return a 
+                # No parameters were specified and the result is too large. Return a
                 # 413 Request Entity Too Large
                 abort(413)
             response = current_app.response_class( json.dumps({
@@ -415,7 +415,7 @@ def dump_db(args):
     print """]
 }
 """
-    
+
 # set the secret key.  keep this really secret:
 app.secret_key = os.urandom(24)
 
