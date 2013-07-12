@@ -392,7 +392,46 @@ def dump_stats(args):
                            for s in aggr['result'] ])
             ])
     print json.dumps(stat, indent=2)
-    
+
+def dump_turtle(args):
+    opts = {}
+    args = dict( a.split('=') for a in args )
+    if args.get('subject'):
+        opts['subject'] = args.get('subject')
+    if args.get('from'):
+        opts['begin'] = { '$gt': long(args.get('from')) }
+    if args.get('to'):
+        opts['end'] = { '$lt': long(args.get('to')) }
+
+    cursor = db['trace'].find(opts)
+    count = cursor.count()
+    obsels = iter_obsels(cursor)
+    for o in obsels:
+        print """@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ktbs: <http://liris.cnrs.fr/silex/2009/ktbs/> .
+@prefix : <../mongo/> .
+
+<%(id)s> a :%(name)s;
+  ktbs:hasTrace <%(traceid)s> ;
+  ktbs:hasBegin %(begin)s;
+  ktbs:hasEnd %(end)s;
+  ktbs:hasSubject "%(subject)s";
+  %(data)s
+.
+""" % {
+            'id': o['@id'],
+            'name': o['@type'],
+            'traceid': "festival",
+            'begin': o['begin'],
+            'end': o['end'],
+            'subject': o['subject'],
+            'data': "\n".join( ':has%s "%s";' % (name.capitalize(),
+                                                 value)
+                               for (name, value) in o.iteritems()
+                               if not name in ('begin', 'end', '@type', '@id', 'id', 'subject'))
+}
+
+
 def dump_db(args):
     """Dump all obsels from the database.
     """
@@ -458,6 +497,10 @@ if __name__ == "__main__":
                       help="Dump database to stdout in JSON format. You can additionnaly specify one or many filters:\n  subject=foo: filter on subject\n  from=NNN: filter from the given timecode\n  to=NNN: filter to the given timecode",
                       default=False)
 
+    parser.add_option("-T", "--dump-as-turtle", dest="dump_turtle", action="store_true",
+                      help="Dump database to stdout in TTL format. You can additionnaly specify one or many filters:\n  subject=foo: filter on subject\n  from=NNN: filter from the given timecode\n  to=NNN: filter to the given timecode",
+                      default=False)
+
     parser.add_option("-S", "--statistics", dest="dump_stats", action="store_true",
                       help="Display database statistics to stdout in JSON format.",
                       default=False)
@@ -481,6 +524,8 @@ if __name__ == "__main__":
 
     if options.dump_stats:
         dump_stats(args)
+    elif options.dump_turtle:
+        dump_turtle(args)
     elif options.dump_db:
         dump_db(args)
     else:
