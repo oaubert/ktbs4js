@@ -392,6 +392,8 @@ def dump_db(args):
   "hasObselList": "",
   "obsels": [""" % count
 
+    prefix = "    "
+
     # Emulate join behaviour but in a streaming mode
     try:
         current = obsels.next()
@@ -403,16 +405,17 @@ def dump_db(args):
         nxt = None
 
     while current is not None:
-        print json.dumps(current,
-                         indent=2,
-                         cls=MongoEncoder) + ("," if nxt is not None else "")
+        print prefix + (json.dumps(current,
+                                   indent=2,
+                                   cls=MongoEncoder) 
+                        + ("," if nxt is not None else "")).replace("\n", "\n" + prefix)
         current = nxt
         try:
             nxt = obsels.next()
         except StopIteration:
             nxt = None
 
-    print """]
+    print """  ]
 }
 """
 
