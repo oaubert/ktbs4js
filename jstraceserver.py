@@ -24,6 +24,7 @@ import uuid
 import re
 import datetime
 import time
+from collections import OrderedDict
 from optparse import OptionParser
 from flask import Flask, Response
 from flask import session, request, redirect, url_for, current_app, make_response, abort
@@ -368,6 +369,21 @@ def logout():
     session.pop('userinfo', None)
     return redirect(url_for('index'))
 
+def dump_stats(args):
+    subjects = db['trace'].distinct('subject')
+    # FIXME: minTimestamp/maxTimestamp should be computed together and
+    # through a mongo map/reduce operation
+    stat = OrderedDict( [
+            ('obselCount', db['trace'].find().count()),
+            ('subjectCount', len(subjects)),
+            ('minTimestamp', min(db['trace'].find({}, {'begin': 1}))['begin']),
+            ('maxTimestamp', max(db['trace'].find({}, {'begin': 1}))['begin']),
+            ('subjects', [ { 'id': s,
+                             'obselCount': db['trace'].find({'subject': s}).count() }
+                           for s in subjects ])
+            ])
+    print json.dumps(stat, indent=2)
+    
 def dump_db(args):
     """Dump all obsels from the database.
     """
@@ -433,6 +449,10 @@ if __name__ == "__main__":
                       help="Dump database to stdout in JSON format. You can additionnaly specify one or many filters:\n  subject=foo: filter on subject\n  from=NNN: filter from the given timecode\n  to=NNN: filter to the given timecode",
                       default=False)
 
+    parser.add_option("-S", "--statistics", dest="dump_stats", action="store_true",
+                      help="Display database statistics to stdout in JSON format.",
+                      default=False)
+
     parser.add_option("-e", "--external", dest="allow_external_access", action="store_true",
                       help="Allow external access (from any host)", default=False)
 
@@ -446,7 +466,9 @@ if __name__ == "__main__":
         options.allow_external_access = False
     CONFIG.update(vars(options))
 
-    if CONFIG['dump_db']:
+    if options.dump_stats:
+        dump_stats(args)
+    elif options.dump_db:
         dump_db(args)
     else:
         print "Options:"
