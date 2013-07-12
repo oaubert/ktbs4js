@@ -371,7 +371,16 @@ def logout():
 def dump_db(args):
     """Dump all obsels from the database.
     """
-    cursor = db['trace'].find()
+    opts = {}
+    args = dict( a.split('=') for a in args )
+    if args.get('subject'):
+        opts['subject'] = args.get('subject')
+    if args.get('from'):
+        opts['begin'] = { '$gt': long(args.get('from')) }
+    if args.get('to'):
+        opts['end'] = { '$lt': long(args.get('to')) }
+
+    cursor = db['trace'].find(opts)
     count = cursor.count()
     obsels = iter_obsels(cursor)
     print """{
@@ -379,8 +388,8 @@ def dump_db(args):
      "http://liris.cnrs.fr/silex/2011/ktbs-jsonld-context"
   ],
   "@id": ".",
-  "hasObselList": "",
   "count": %d,
+  "hasObselList": "",
   "obsels": [""" % count
 
     # Emulate join behaviour but in a streaming mode
@@ -418,7 +427,7 @@ if __name__ == "__main__":
                       default=False)
 
     parser.add_option("-D", "--dump", dest="dump_db", action="store_true",
-                      help="Dump database to stdout in JSON format",
+                      help="Dump database to stdout in JSON format. You can additionnaly specify one or many filters:\n  subject=foo: filter on subject\n  from=NNN: filter from the given timecode\n  to=NNN: filter to the given timecode",
                       default=False)
 
     parser.add_option("-e", "--external", dest="allow_external_access", action="store_true",
