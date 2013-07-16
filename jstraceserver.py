@@ -391,7 +391,7 @@ def dump_stats(args):
                              'maxTimestamp': s['max'] }
                            for s in aggr['result'] ])
             ])
-    print json.dumps(stat, indent=2)
+    print json.dumps(stat, indent=2).encode('utf-8')
 
 def dump_turtle(args):
     opts = {}
@@ -407,9 +407,9 @@ def dump_turtle(args):
     count = cursor.count()
     obsels = iter_obsels(cursor)
     for o in obsels:
-        print """@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+        out = u"""@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix ktbs: <http://liris.cnrs.fr/silex/2009/ktbs/> .
-@prefix : <../mongo/> .
+@prefix : <../festival/> .
 
 <%(id)s> a :%(name)s;
   ktbs:hasTrace <%(traceid)s> ;
@@ -425,11 +425,12 @@ def dump_turtle(args):
             'begin': o['begin'],
             'end': o['end'],
             'subject': o['subject'],
-            'data': "\n".join( ':has%s "%s";' % (name.capitalize(),
-                                                 value)
-                               for (name, value) in o.iteritems()
-                               if not name in ('begin', 'end', '@type', '@id', 'id', 'subject'))
-}
+            'data': u"\n  ".join( u':has%s %s;' % (name.capitalize(),
+                                                 u'"%s"' % value if isinstance(value, unicode) else unicode(value))
+                                for (name, value) in o.iteritems()
+                                if not name in ('begin', 'end', '@type', '@id', 'id', 'subject'))
+            }
+        print out.encode('utf-8')
 
 
 def dump_db(args):
