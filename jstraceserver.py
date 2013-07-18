@@ -408,11 +408,11 @@ def dump_turtle(args):
     obsels = iter_obsels(cursor)
     for o in obsels:
         out = u"""@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix ktbs: <http://liris.cnrs.fr/silex/2009/ktbs/> .
-@prefix : <../festival/> .
+@prefix ktbs: <http://liris.cnrs.fr/silex/2009/ktbs#> .
+@prefix : <../model/> .
 
 <%(id)s> a :%(name)s;
-  ktbs:hasTrace <%(traceid)s> ;
+  ktbs:hasTrace <> ;
   ktbs:hasBegin %(begin)s;
   ktbs:hasEnd %(end)s;
   ktbs:hasSubject "%(subject)s";
@@ -421,7 +421,6 @@ def dump_turtle(args):
 """ % {
             'id': o['@id'],
             'name': o['@type'],
-            'traceid': "festival",
             'begin': o['begin'],
             'end': o['end'],
             'subject': o['subject'],
