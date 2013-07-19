@@ -33,7 +33,27 @@ window.tracemanager = (function($) {
          }
      };
 
-     var BufferedService_prototype = {
+     var BufferedService = function(url, mode, format, handshake) {
+         this.url = url;
+         this.buffer = [];
+         this.isReady = !handshake;
+         this.timer = null;
+         this.failureCount = 0;
+         // sync_mode is either "none", "sync" or "buffered"
+         this.sync_mode = "none";
+         /* mode can be either POST or GET */
+         if (mode == 'POST' || mode == 'GET')
+             this.mode = mode;
+         else
+             this.mode = 'POST';
+         /* Data format */
+         this.format = (this.mode === 'GET' ? 'json-compact' : 'json');
+         if (format !== undefined)
+             this.format = format;
+         /* Flush buffer every timeOut ms if the sync_mode is delayed */
+         this.timeOut = 2000;
+     };
+     BufferedService.prototype = {
          /*
           *  Buffered service for traces
           */
@@ -194,29 +214,31 @@ window.tracemanager = (function($) {
              }
          }
      };
-     var BufferedService = function(url, mode, format, handshake) {
-         this.url = url;
-         this.buffer = [];
-         this.isReady = !handshake;
-         this.timer = null;
-         this.failureCount = 0;
-         // sync_mode is either "none", "sync" or "buffered"
-         this.sync_mode = "none";
-         /* mode can be either POST or GET */
-         if (mode == 'POST' || mode == 'GET')
-             this.mode = mode;
-         else
-             this.mode = 'POST';
-         /* Data format */
-         this.format = (this.mode === 'GET' ? 'json-compact' : 'json');
-         if (format !== undefined)
-             this.format = format;
-         /* Flush buffer every timeOut ms if the sync_mode is delayed */
-         this.timeOut = 2000;
-     };
-     BufferedService.prototype = BufferedService_prototype;
 
-     var Trace_prototype = {
+     var Trace = function(uri, requestmode, format, handshake) {
+         /* FIXME: We could/should use a sorted list such as
+          http://closure-library.googlecode.com/svn/docs/class_goog_structs_AvlTree.html
+          to speed up queries based on time */
+         this.obsels = [];
+         /* Trace URI */
+         if (uri === undefined)
+             uri = "";
+         this.uri = uri;
+         this.sync_mode = "none";
+         this.default_subject = "";
+         this.shorthands = {};
+         /* baseuri is used a the base URI to resolve relative attribute names in obsels */
+         this.baseuri = "";
+
+         this.syncservice = new BufferedService(uri, requestmode, format, handshake);
+         $(window).unload( function () {
+                               if (this.syncservice && this.sync_mode !== 'none') {
+                                   this.syncservice.flush();
+                                   this.syncservice.stop_timer();
+                               }
+                           });
+     };
+     Trace.prototype = {
          /* FIXME: We could/should use a sorted list such as
           http://closure-library.googlecode.com/svn/docs/class_goog_structs_AvlTree.html
           to speed up queries based on time */
@@ -342,32 +364,20 @@ window.tracemanager = (function($) {
          }
      };
 
-     var Trace = function(uri, requestmode, format, handshake) {
-         /* FIXME: We could/should use a sorted list such as
-          http://closure-library.googlecode.com/svn/docs/class_goog_structs_AvlTree.html
-          to speed up queries based on time */
-         this.obsels = [];
-         /* Trace URI */
-         if (uri === undefined)
-             uri = "";
-         this.uri = uri;
-         this.sync_mode = "none";
-         this.default_subject = "";
-         this.shorthands = {};
-         /* baseuri is used a the base URI to resolve relative attribute names in obsels */
-         this.baseuri = "";
-
-         this.syncservice = new BufferedService(uri, requestmode, format, handshake);
-         $(window).unload( function () {
-                               if (this.syncservice && this.sync_mode !== 'none') {
-                                   this.syncservice.flush();
-                                   this.syncservice.stop_timer();
-                               }
-                           });
+     var Obsel = function(type, begin, end, subject, attributes) {
+         this.trace = undefined;
+         this.uri = "";
+         this.id = "";
+         this.type = type;
+         this.begin = begin;
+         this.end = end;
+         this.subject = subject;
+         /* Is the obsel synched with the server ? */
+         this.sync_status = false;
+         /* Dictionary indexed by ObselType URIs */
+         this.attributes = {};
      };
-     Trace.prototype = Trace_prototype;
-
-     var Obsel_prototype = {
+     Obsel.prototype = {
          /* The following attributes are here for documentation
           * purposes. They MUST be defined in the constructor
           * function. */
@@ -537,22 +547,10 @@ window.tracemanager = (function($) {
 
      };
 
-     var Obsel = function(type, begin, end, subject, attributes) {
-         this.trace = undefined;
-         this.uri = "";
-         this.id = "";
-         this.type = type;
-         this.begin = begin;
-         this.end = end;
-         this.subject = subject;
-         /* Is the obsel synched with the server ? */
-         this.sync_status = false;
-         /* Dictionary indexed by ObselType URIs */
-         this.attributes = {};
+     var TraceManager = function() {
+         this.traces = {};
      };
-     Obsel.prototype = Obsel_prototype;
-
-     var TraceManager_prototype = {
+     TraceManager.prototype = {
          traces: [],
          /*
           * Return the trace with id name
@@ -584,11 +582,6 @@ window.tracemanager = (function($) {
              return t;
          }
      };
-
-     var TraceManager = function() {
-         this.traces = {};
-     };
-     TraceManager.prototype = TraceManager_prototype;
 
      var tracemanager  = new TraceManager();
      return tracemanager;
