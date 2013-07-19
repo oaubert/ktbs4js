@@ -83,7 +83,8 @@ window.tracemanager = (function($) {
                  if (this.format === 'turtle') {
                      content_type = "text/turtle";
                      data = [ "@prefix : <http://liris.cnrs.fr/silex/2009/ktbs#>.\n",
-                              "@prefix m: <http://liris.cnrs.fr/silex/2013/uwc#>.\n" ]
+                              // Assume that the model for a trace has for URI <trace_uri> + "model#"
+                              "@prefix m: <model#>.\n" ]
                          .concat(temp.map(function(o) { return o.toTurtle(); }))
                          .join("\n");
                  } else if (this.format === 'json-compact') {
