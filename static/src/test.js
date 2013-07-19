@@ -2,7 +2,7 @@ $(window).load(function() {
                    console.log("Starting test")
 
                    tr = window.tracemanager.init_trace("test", {
-                                                           url: "http://localhost:5000/",
+                                                           url: "http://localhost:5000/trace",
                                                            requestmode: 'GET',
                                                            syncmode: "delayed",
                                                            default_subject: "ktbs4js"
