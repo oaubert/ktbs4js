@@ -369,18 +369,18 @@ def logout():
     session.pop('userinfo', None)
     return redirect(url_for('index'))
 
-def dump_stats(args):
-    aggr = db['trace'].aggregate( [ 
+def get_stats(args=None):
+    aggr = db['trace'].aggregate( [
             { '$match': { 'begin': { '$ne': 0 } } },
-            { '$group': 
-              { '_id': '$subject', 
+            { '$group':
+              { '_id': '$subject',
                 'min': { '$min': '$begin' },
                 'max': { '$max': '$end' },
                 'obselCount': { '$sum': 1 }
-                } 
-              } 
+                }
+              }
             ] )
-    stat = OrderedDict( [
+    return OrderedDict( [
             ('obselCount', db['trace'].find().count()),
             ('subjectCount', len(aggr['result'])),
             ('minTimestamp', min(r['min'] for r in aggr['result'])),
@@ -391,7 +391,9 @@ def dump_stats(args):
                              'maxTimestamp': s['max'] }
                            for s in aggr['result'] ])
             ])
-    print json.dumps(stat, indent=2).encode('utf-8')
+
+def dump_stats(args):
+    print json.dumps(get_stats(args), indent=2).encode('utf-8')
 
 def dump_turtle(args):
     opts = {}
@@ -404,7 +406,6 @@ def dump_turtle(args):
         opts['end'] = { '$lt': long(args.get('to')) }
 
     cursor = db['trace'].find(opts)
-    count = cursor.count()
     obsels = iter_obsels(cursor)
     for o in obsels:
         out = u"""@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -471,7 +472,7 @@ def dump_db(args):
     while current is not None:
         print prefix + (json.dumps(current,
                                    indent=2,
-                                   cls=MongoEncoder) 
+                                   cls=MongoEncoder)
                         + ("," if nxt is not None else "")).replace("\n", "\n" + prefix)
         current = nxt
         try:
