@@ -57,33 +57,50 @@ window.tracemanager = (function($) {
              } else if (this.buffer.length) {
                  var temp = this.buffer;
                  this.buffer = [];
+                 var content_type = 'application/json';
+                 var data;
 
-                 if (this.mode == 'GET')
-                 {
-                     // GET mode: do some data mangline. We mark the
-                     // "compressed" nature of the generated JSON by
-                     // prefixing it with c
-                     var data = 'c' + JSON.stringify(temp.map(function (o) { return o.toCompactJSON(); }));
+                 if (this.format === 'turtle') {
+                     content_type = "text/turtle";
+                     data = [ "@prefix : <http://liris.cnrs.fr/silex/2009/ktbs#>.\n",
+                              "@prefix m: <http://liris.cnrs.fr/silex/2013/uwc#>.\n" ]
+                         .concat(temp.map(function(o) { return o.toTurtle(); }))
+                         .join("\n");
+                 } else if (this.format === 'json-compact') {
+                     content_type = "application/x-json-compact";
+                     // We mark the "compressed" nature of the
+                     // generated JSON by prefixing it with c
+                     data = 'c' + JSON.stringify(temp.map(function (o) { return o.toCompactJSON(); }));
                      // Swap " (very frequent, which will be
                      // serialized into %22) and ; (rather rare), this
                      // saves some bytes
                      data = data.replace(/[;"#]/g, function(s){ return s == ';' ? '"' : ( s == '"' ? ';' : '%23'); });
+                 } else {
+                     // Default format: json
+                     data = JSON.stringify(temp.map(function (o) { return o.toJSON(); }));
+                 }
+
+                 if (this.mode == 'GET')
+                 {
+                     data = "post=" + encodeURIComponent(data);
+                     if (content_type !== 'application/x-json-compact')
+                         data = 'content-type=' + content_type + '&' + data;
                      // FIXME: check data length (< 2K is safe)
                      var request=$('<img />').error( function() { this.failureCount += 1; })
                          .load( function() { this.failureCount = 0; })
-                         .attr('src', this.url + 'trace/?data=' + data);
+                         .attr('src', this.url + '?' + data);
                  }
                  else
                  {
-                     $.ajax({ url: this.url + 'trace/',
+                     $.ajax({ url: this.url,
                               type: 'POST',
-                              contentType: 'application/json',
-                              data: JSON.stringify(temp.map(function (o) { return o.toJSON(); })),
+                              contentType: content_type,
+                              data: data,
                               processData: false,
                               // Type of the returned data.
-                              dataType: "html",
+                              dataType: "text",
                               error: function(jqXHR, textStatus, errorThrown) {
-                                  logmsg("Error when sending buffer:", textStatus);
+                                  logmsg("Error when sending buffer:", textStatus + ' ' + JSON.stringify(errorThrown));
                                   this.failureCount += 1;
                               },
                               success: function(data, textStatus, jqXHR) {
@@ -149,8 +166,11 @@ window.tracemanager = (function($) {
              if (this.isReady)
                  /* Already initialized */
                  return;
-             if (typeof default_subject === 'undefined')
-                 default_subject = 'anonymous';
+             if (typeof default_subject === 'undefined' || default_subject == "")
+             {
+                 this.isReady = true;
+                 return;
+             }
              if (this.mode == 'GET')
              {
                  var request=$('<img/>').attr('src', this.url + 'login?userinfo={"default_subject": "' + default_subject + '"}');
@@ -174,10 +194,10 @@ window.tracemanager = (function($) {
              }
          }
      };
-     var BufferedService = function(url, mode) {
+     var BufferedService = function(url, mode, format, handshake) {
          this.url = url;
          this.buffer = [];
-         this.isReady = false;
+         this.isReady = !handshake;
          this.timer = null;
          this.failureCount = 0;
          // sync_mode is either "none", "sync" or "buffered"
@@ -187,6 +207,10 @@ window.tracemanager = (function($) {
              this.mode = mode;
          else
              this.mode = 'POST';
+         /* Data format */
+         this.format = (this.mode === 'GET' ? 'json-compact' : 'json');
+         if (format !== undefined)
+             this.format = format;
          /* Flush buffer every timeOut ms if the sync_mode is delayed */
          this.timeOut = 2000;
      };
@@ -318,7 +342,7 @@ window.tracemanager = (function($) {
          }
      };
 
-     var Trace = function(uri, requestmode) {
+     var Trace = function(uri, requestmode, format, handshake) {
          /* FIXME: We could/should use a sorted list such as
           http://closure-library.googlecode.com/svn/docs/class_goog_structs_AvlTree.html
           to speed up queries based on time */
@@ -333,7 +357,7 @@ window.tracemanager = (function($) {
          /* baseuri is used a the base URI to resolve relative attribute names in obsels */
          this.baseuri = "";
 
-         this.syncservice = new BufferedService(uri, requestmode);
+         this.syncservice = new BufferedService(uri, requestmode, format, handshake);
          $(window).unload( function () {
                                if (this.syncservice && this.sync_mode !== 'none') {
                                    this.syncservice.flush();
@@ -488,7 +512,29 @@ window.tracemanager = (function($) {
 
          toJSONstring: function() {
              return JSON.stringify(this.toJSON());
-         }
+         },
+
+        /*
+         * Return a Turtle representation of the obsel,
+         * assuming that : is bound to the KTBS namespace,
+         * and that m: is bound to the model namespace.
+         */
+        toTurtle: function () {
+            var prop;
+            var data = [ "[ :hasTrace <> ;",
+                         "  a m:" + this.type + " ;" ];
+            if (this.begin) { data.push("  :hasBegin " + this.begin + " ;"); }
+            if (this.end) { data.push("  :hasEnd " + this.end + " ;"); }
+            if (this.subject) { data.push("  :hasSubject \"" + this.subject + "\" ;"); }
+            for (prop in this.attributes) {
+                if (this.attributes.hasOwnProperty(prop)) {
+                    data.push("  m:" + prop + " " + JSON.stringify(this.attributes[prop]));
+                }
+            }
+            data.push("] .\n");
+            return data.join("\n");
+        }
+
      };
 
      var Obsel = function(type, begin, end, subject, attributes) {
@@ -525,11 +571,13 @@ window.tracemanager = (function($) {
          init_trace: function(name, params)
          {
              logmsg("init_trace", params);
-             url = params.url ? params.url : "";
-             requestmode = params.requestmode ? params.requestmode : "POST";
-             syncmode = params.syncmode ? params.syncmode : "none";
-             default_subject = params.default_subject ? params.default_subject : "default";
-             var t = new Trace(url, requestmode);
+             var url = params.url ? params.url : "";
+             var requestmode = params.requestmode ? params.requestmode : "POST";
+             var syncmode = params.syncmode ? params.syncmode : "none";
+             var format = params.format || "json";
+             var default_subject = params.default_subject || "";
+             var handshake = params.handshake;
+             var t = new Trace(url, requestmode, format, handshake);
              t.set_default_subject(default_subject);
              t.set_sync_mode(syncmode);
              this.traces[name] = t;
