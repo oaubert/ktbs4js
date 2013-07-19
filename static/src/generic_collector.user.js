@@ -29,17 +29,17 @@
     var tr = window.tracemanager.init_trace("test", {
         url: TRACE_URI,
         requestmode: 'POST', // alternatives: "GET", "POST"
-        syncmode: "delayed", // alternatives: "sync", "delayed"
+        syncmode: "delayed", // alternatives: "sync", "delayed", "none"
         default_subject: "alice",
         format: "turtle", // alternatives: "turtle", "json", "json-compact"
-        login: false,
+        handshake: false,
     });
 
     $(window).unload(function() {
         var sync = tr.syncservice;
         sync.flush(false); // flushing asynchronously
     });
-    
+
     function getXPath(element) {
         // derived from http://stackoverflow.com/a/3454579/1235487
         while (element && element.nodeType !== 1) {
