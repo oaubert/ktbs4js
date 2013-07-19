@@ -191,34 +191,21 @@ def trace():
 
 def generate_trace_index_document(detail=False):
     yield """<b>Available subjects:</b>\n<ul>"""
-    for s in db['trace'].distinct('subject'):
-        if detail:
-            # Too costly to compute by default. Could be an AJAX method.
-            count = db['trace'].find({'subject': s}).count()
-            if count < MAX_DEFAULT_OBSEL_COUNT:
-                yield """<li><a href="%s">%s</a> (%d)</li>""" % (s, s, count)
-            else:
-                # More than MAX_DEFAULT_OBSEL_COUNT obsels: provide links to day-specific traces
-                yield """<li><a href="%s">%s</a> (%d)""" % (s, s, count)
-                yield """<ul>"""
-                start = min(db['trace'].find({'subject': s}, {'begin': 1}))['begin']
-                t = time.localtime(start / 1000)
-                dt = datetime.datetime(*t[:7])
-                today = dt.today()
-                while dt < today:
-                    begin = long(1000 * time.mktime(dt.timetuple()))
-                    dt = dt + datetime.timedelta(1)
-                    end = long(1000 * time.mktime(dt.timetuple()))
-                    count = db['trace'].find({ 'subject': s,
-                                               'begin': { '$gt': begin },
-                                               'end': { '$lt': end } }).count()
-                    if count > 0:
-                        begindate = str(dt.date())
-                        yield """   <li><a href="%(s)s?from=%(begindate)s&to=%(begindate)s">%(begindate)s</a> (%(count)d items)</li>""" % locals()
-                yield """</ul></li>"""
-        else:
-            yield """<li><a href="%s">%s</a></li>""" % (s, s)
+    stat = get_stats()
+    for s in stat['subjects']:
+        yield """<li><a href="%s">%s</a> (%d obsels between %s and %s)</li>""" % (s['id'],
+                                                                                  s['id'],
+                                                                                  s['obselCount'],
+                                                                                  format_time(s['minTimestamp']),
+                                                                                  format_time(s['maxTimestamp']))
     yield """</ul>"""
+
+def format_time(ts):
+    """Format a timestamp in ms to a string.
+    """
+    t = time.localtime(long(ts) / 1000)
+    dt = datetime.datetime(*t[:7])
+    return str(dt.date())
 
 def ts_to_ms(ts, is_ending_timestamp=False):
     """Convert a timestamp to ms.
