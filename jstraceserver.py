@@ -138,7 +138,7 @@ def trace():
         if request.method == 'POST':
             obsels = request.json
         else:
-            data = request.values['data']
+            data = request.values['post']
             if data.startswith('c['):
                 # Data mangling here. Pseudo compression is involved.
                 # Swap " and ;. Note that we use unicode.translate, so we pass a dict mapping.
