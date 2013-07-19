@@ -5,7 +5,9 @@ $(window).load(function() {
                                                            url: "http://localhost:5000/trace/",
                                                            requestmode: 'GET',
                                                            syncmode: "delayed",
-                                                           default_subject: "ktbs4js"
+                                                           default_subject: "ktbs4js",
+                                                           format: 'json-compact',
+                                                           handshake: true
                                                        });
                    tr.trace("StartTracing", { foo: "bar" });
                    for (var i = 0; i < 10; i++) {
