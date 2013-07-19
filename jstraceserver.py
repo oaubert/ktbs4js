@@ -200,6 +200,50 @@ def generate_trace_index_document(detail=False):
                                                                                   format_time(s['maxTimestamp']))
     yield """</ul>"""
 
+@app.route('/stat/user/', methods= [ 'GET' ])
+def users_stats(user=None):
+    """Return user stats
+    """
+    return current_app.response_class(json.dumps(get_stats()),
+                                      mimetype='application/json')
+
+@app.route('/stat/user/<path:user>', methods= [ 'GET' ])
+def user_stats(user):
+    """Return detailed stats (by day) for the given user.
+    """
+    aggr = db['trace'].aggregate( [
+            { '$match': { 'begin': { '$ne': 0 },
+                          'subject': user } },
+            { '$group':
+              { '_id': '$subject',
+                'min': { '$min': '$begin' },
+                'max': { '$max': '$end' },
+                'obselCount': { '$sum': 1 }
+                }
+              }
+            ] )
+    ranges = []
+
+    t = time.localtime(aggr['result'][0]['max'] / 1000)
+    tmax = datetime.datetime(*t[:7])
+    t = time.localtime(aggr['result'][0]['min'] / 1000)
+    dt = datetime.datetime(*t[:7])
+
+    while dt < tmax:
+        begin = long(1000 * time.mktime(dt.timetuple()))
+        dt = dt + datetime.timedelta(1)
+        end = long(1000 * time.mktime(dt.timetuple()))
+        count = db['trace'].find({ 'subject': user,
+                                   'begin': { '$gt': begin },
+                                   'end': { '$lt': end } }).count()
+        if count > 0:
+            ranges.append({ 'date': str(dt.date()),
+                            'obselCount': count })
+
+    return current_app.response_class(json.dumps({ 'subject': user,
+                                                   'ranges': ranges }),
+                                      mimetype='application/json')
+
 def format_time(ts):
     """Format a timestamp in ms to a string.
     """
