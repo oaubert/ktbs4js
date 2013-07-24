@@ -26,3 +26,17 @@ You need to install :
 * If MongoDB is not started, start it with the command: "mongod" (or see you distribution informations about services)
 * Start the Server with the commmand : "python jstraceserver.py"
 * To test it, open your browser and go to : (http://127.0.0.1:5000/static/test.html)
+
+Usage
+-----
+
+The handshake parameter indicates wether a "login" method should be
+called on the trace. Calling this method has 2 functions:
+
+- when using POST requests, the synchronisation mechanism is activated
+  only if this method returns a successful status.
+
+- the default_subject information is passed along in its data. The
+  trace server is then assumed to memorize this information, and the
+  lib will not send it in future obsels when using the compact-json
+  format.
