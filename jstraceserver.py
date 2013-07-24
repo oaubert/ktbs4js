@@ -309,7 +309,13 @@ def trace_get(info):
     info = info.split('/')
     if len(info) == 1 or (len(info) == 2 and info[1] == ''):
         # subject
-        total = db['trace'].find({'subject': info[0]}).count()
+        if info[0] == '@obsels':
+            # Address all obsels
+            obsels = db['trace'].find()
+        else:
+            obsels = db['trace'].find({'subject': info[0]})
+        total = obsels.count()
+
         if page_number is not None:
             # User requested a specific page number.
             i = page_number * page_size
@@ -329,7 +335,7 @@ def trace_get(info):
                     # setting cursor), then the Content-Range will
                     # start at 0 -> wrong info. So we have to generate
                     # the response here
-                    cursor = db['trace'].find({'subject': info[0]}).skip(i).limit(page_number)
+                    cursor = obsels.skip(i).limit(page_size)
                     count = cursor.count()
                     response = current_app.response_class( json.dumps({
                                 "@context": [
@@ -348,15 +354,13 @@ def trace_get(info):
         elif from_ts is not None:
             if to_ts is None:
                 # Only > from_ts
-                cursor = db['trace'].find({ 'subject': info[0],
-                                            'begin': { '$gt': from_ts } })
+                cursor = obsels.filter({ 'begin': { '$gt': from_ts } })
             else:
-                cursor = db['trace'].find({ 'subject': info[0],
-                                            'begin': { '$gt': from_ts },
-                                            'end': { '$lt': to_ts } })
+                cursor = obsels.filter({ 'begin': { '$gt': from_ts },
+                                         'end': { '$lt': to_ts } })
         else:
-            # No restriction. Count all obsels.
-            cursor = db['trace'].find({ 'subject': info[0] })
+            # No restriction. Use all obsels.
+            cursor = obsels
 
         count = cursor.count()
         if request.method == 'HEAD':
