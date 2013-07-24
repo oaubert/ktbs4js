@@ -238,7 +238,11 @@ window.tracemanager = (function($) {
                                    this.syncservice.stop_timer();
                                }
                            });
+
+         // Now that all is set up, we can try to load existing obsels.
+         this.load_obsels();
      };
+
      Trace.prototype = {
          /* FIXME: We could/should use a sorted list such as
           http://closure-library.googlecode.com/svn/docs/class_goog_structs_AvlTree.html
@@ -270,6 +274,33 @@ window.tracemanager = (function($) {
              if (this.syncservice !== null) {
                  this.syncservice.set_sync_mode(mode, this.default_subject);
              }
+         },
+
+         /* Load obsels from the Trace url */
+         load_obsels: function(suffix) {
+             var self = this;
+             logmsg("load obsels", suffix);
+             $.ajax({ url: this.uri + "@obsels" + (suffix || ""),
+                      type: 'GET',
+                      // Type of the returned data.
+                      dataType: "json",
+                      statusCode: {
+                          413: function(jqXHR, textStatus, errorThrown) {
+                              // Entity request too large.
+                              // Resend query with restriction
+                              self.load_obsels('?page=1');
+                          }
+                      },
+                      error: function(jqXHR, textStatus, errorThrown) {
+                          logmsg("Cannot load obsels: ", textStatus + ' ' + JSON.stringify(errorThrown));
+                      },
+                      success: function(data, textStatus, jqXHR) {
+                          // Parse received data to populate this.obsels
+                          if (data.hasOwnProperty('obsels')) {
+                              self.obsels.concat(data.obsels);
+                          }
+                      }
+                    });
          },
 
          /*
