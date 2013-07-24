@@ -302,10 +302,10 @@ def trace_get(info):
     to_ts = ts_to_ms(request.values.get('to', None), True)
     page_number = request.values.get('page', None)
     if page_number is not None:
-        page_number = long(page_number)
+        page_number = int(page_number)
     page_size = request.values.get('pageSize', 100)
     if page_size is not None:
-        page_size = long(page_size)
+        page_size = int(page_size)
     info = info.split('/')
     if len(info) == 1 or (len(info) == 2 and info[1] == ''):
         # subject
