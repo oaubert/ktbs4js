@@ -321,6 +321,7 @@ def trace_get(info):
                     response = make_response()
                     end = min(i + page_size, total)
                     response.headers['Content-Range'] = "items %d-%d/%d" % (i, max(end - 1, 0), total)
+                    response.headers['Content-Type'] = 'application/json'
                     response.headers['Access-Control-Allow-Origin'] = '*'
                     return response
                 else:
@@ -342,6 +343,7 @@ def trace_get(info):
                                                                   cls=MongoEncoder),
                                                            mimetype='application/json')
                     response.headers['Content-Range'] = "items %d-%d/%d" % (i, i + count, total)
+                    response.headers['Content-Type'] = 'application/json'
                     return response
         elif from_ts is not None:
             if to_ts is None:
@@ -360,6 +362,7 @@ def trace_get(info):
         if request.method == 'HEAD':
             response = make_response()
             response.headers['Content-Range'] = "items 0-%d/%d" % (max(count - 1, 0), total)
+            response.headers['Content-Type'] = 'application/json'
             return response
         else:
             if count > MAX_DEFAULT_OBSEL_COUNT and from_ts is None and to_ts is None and page_number is None:
@@ -391,7 +394,7 @@ def trace_get(info):
                     "obsels": list(iter_obsels(db['trace'].find( { '_id': bson.ObjectId(info[1]) }))) },
                                    indent=None if request.is_xhr else 2,
                                    cls=MongoEncoder),
-                    mimetype='application/json')
+                                           mimetype='application/json')
     else:
         return "Got info: " + ",".join(info)
 
