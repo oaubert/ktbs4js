@@ -548,8 +548,8 @@ window.tracemanager = (function($) {
              this.begin = j.begin;
              this.end = j.end;
              this.attributes = {};
-             for (var k in Object.keys(j)) {
-                 if (this.PRIVATE_JSON_PROPERTIES.indexOf(k) === -1) {
+             for (var k in j) {
+                 if (j.hasOwnProperty(k) && this.PRIVATE_JSON_PROPERTIES.indexOf(k) === -1) {
                      // Not a private property, copy it into attributes
                      this.attributes[k] = j[k];
                  }
