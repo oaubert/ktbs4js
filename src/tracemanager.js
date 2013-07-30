@@ -279,7 +279,6 @@ window.tracemanager = (function($) {
          /* Load obsels from the Trace url */
          load_obsels: function(suffix) {
              var self = this;
-             logmsg("load obsels", suffix);
              $.ajax({ url: this.uri + "@obsels" + (suffix || ""),
                       type: 'GET',
                       // Type of the returned data.
@@ -296,9 +295,7 @@ window.tracemanager = (function($) {
                       },
                       success: function(data, textStatus, jqXHR) {
                           // Parse received data to populate this.obsels
-                          if (data.hasOwnProperty('obsels')) {
-                              self.obsels.concat(data.obsels);
-                          }
+                          self.parseJSON(data);
                       }
                     });
          },
@@ -376,6 +373,24 @@ window.tracemanager = (function($) {
          },
 
          /* Helper methods */
+
+         /*
+          * Parse a JSON-LD trace representation and add resulting
+          * obsels to the trace obsels.
+          */
+         parseJSON: function(data) {
+             var self = this;
+             // FIXME: check @context
+             // Parse received data to populate this.obsels
+             if (data.hasOwnProperty('obsels')) {
+                 var o;
+                 data.obsels.forEach(function(j) {
+                                         o = (new Obsel()).fromJSON(j);
+                                         o.trace = this;
+                                         self.obsels.push(o);
+                                     });
+             }
+         },
 
          /* Create a new obsel with the given attributes */
          trace: function(type, _attributes, _begin, _end, _subject) {
@@ -519,6 +534,27 @@ window.tracemanager = (function($) {
                      r[prop] = this.attributes[prop];
              }
              return r;
+         },
+
+         /*
+          * Initialize the Obsel attributes from the given JSON-LD representation
+          */
+         PRIVATE_JSON_PROPERTIES: [ '@id', '@type', 'subject', 'begin', 'end' ],
+
+         fromJSON: function(j) {
+             this.id = j['@id'];
+             this.type = j['@type'];
+             this.subject = j.subject;
+             this.begin = j.begin;
+             this.end = j.end;
+             this.attributes = {};
+             for (var k in Object.keys(j)) {
+                 if (this.PRIVATE_JSON_PROPERTIES.indexOf(k) === -1) {
+                     // Not a private property, copy it into attributes
+                     this.attributes[k] = j[k];
+                 }
+             }
+             return this;
          },
 
          /*
