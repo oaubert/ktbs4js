@@ -159,7 +159,7 @@ define(['jquery'], function ($) {
              if (this.sync_mode === 'sync') {
                  // Immediate sync of the obsel.
                  this.flush();
-             }
+             };
          },
 
          start_timer: function() {
@@ -369,6 +369,7 @@ define(['jquery'], function ($) {
              this.obsels.push(o);
              if (this.syncservice !== null)
                  this.syncservice.enqueue(o);
+             $(this).trigger('updated');
          },
 
          /* Helper methods */
@@ -388,6 +389,7 @@ define(['jquery'], function ($) {
                                          o.trace = this;
                                          self.obsels.push(o);
                                      });
+                 $(this).trigger('updated');
              }
          },
 
