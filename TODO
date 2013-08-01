@@ -1,4 +1,5 @@
-* Use require.js: 
-http://robdodson.me/blog/2012/11/18/a-require-dot-js-multipage-shimmed-site-how-to/
+* Emit signals on obsel list updates
 * Write unit tests
 * Write better doc/README/tutorial
+* Integrate a timeline viz: https://github.com/almende/vis
+ See also http://square.github.io/cubism/

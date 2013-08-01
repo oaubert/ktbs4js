@@ -17,8 +17,7 @@
  * License along with ktbs4js.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-/* FIXME: properly use require.js feature. This will do for debugging in the meantime */
-window.tracemanager = (function($) {
+define(['jquery'], function ($) {
      // If there are more than MAX_FAILURE_COUNT synchronisation
      // failures, then disable synchronisation
      MAX_FAILURE_COUNT = 20;
@@ -653,4 +652,4 @@ window.tracemanager = (function($) {
 
      var tracemanager  = new TraceManager();
      return tracemanager;
- })(jQuery);
+ });
