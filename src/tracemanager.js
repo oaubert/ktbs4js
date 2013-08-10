@@ -659,7 +659,6 @@ define(['jquery'], function ($) {
           */
          init_trace: function(name, params)
          {
-             logmsg("init_trace", params);
              var url = params.url ? params.url : "";
              var requestmode = params.requestmode ? params.requestmode : "POST";
              var syncmode = params.syncmode ? params.syncmode : "none";
