@@ -275,10 +275,32 @@ define(['jquery'], function ($) {
              }
          },
 
-         /* Load obsels from the Trace url */
-         load_obsels: function(suffix) {
+         /* Load obsels from the Trace url
+          * options is an object that contains optional parameters:
+          *  - page: the page number
+          *  - pagesize: the page size
+          *  - from: the minimum timestamp
+          *  - to: the maximum timestamp
+          */
+         load_obsels: function(options) {
              var self = this;
-             $.ajax({ url: this.uri + "@obsels" + (suffix || ""),
+             var params = [];
+
+             if (options !== undefined) {
+                 if (options.page !== undefined)
+                     params.push("page=" + options.page);
+                 if (options.pagesize !== undefined)
+                     params.push("pageSize=" + options.pagesize);
+                 if (options.from !== undefined)
+                     // FIXME: convert from Date to ms if necessary
+                     params.push("from=" + options.from);
+                 if (options.to !== undefined)
+                     params.push("to=" + options.to);
+             }
+
+             $.ajax({ url: this.uri + "@obsels" + (params.length
+                                                   ? ("?" + params.join('&'))
+                                                   : ""),
                       type: 'GET',
                       // Type of the returned data.
                       dataType: "json",
@@ -286,7 +308,7 @@ define(['jquery'], function ($) {
                           413: function(jqXHR, textStatus, errorThrown) {
                               // Entity request too large.
                               // Resend query with restriction
-                              self.load_obsels('?page=1');
+                              self.load_obsels({ page: 1 });
                           }
                       },
                       error: function(jqXHR, textStatus, errorThrown) {
