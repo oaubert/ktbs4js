@@ -167,7 +167,7 @@
             if (this.sync_mode === 'sync') {
                 // Immediate sync of the obsel.
                 this.flush();
-            };
+            }
         },
 
         start_timer: function() {
@@ -194,7 +194,7 @@
             if (this.isReady)
                 /* Already initialized */
                 return;
-            if (typeof default_subject === 'undefined' || default_subject == "")
+            if (typeof default_subject === 'undefined' || default_subject === "")
             {
                 this.isReady = true;
                 return;
@@ -306,9 +306,7 @@
                     params.push("to=" + options.to);
             }
 
-            $.ajax({ url: this.uri + "@obsels" + (params.length
-                                                  ? ("?" + params.join('&'))
-                                                  : ""),
+            $.ajax({ url: this.uri + "@obsels" + (params.length ? ("?" + params.join('&')) : ""),
                      type: 'GET',
                      // Type of the returned data.
                      dataType: "json",
