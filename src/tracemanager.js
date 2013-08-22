@@ -176,7 +176,7 @@
         },
 
         /**
-         * Enqueue an obsel 
+         * Enqueue an obsel
          * @param {Obsel} obsel: the obsel to enqueue
          **/
         enqueue: function(obsel) {
@@ -261,8 +261,8 @@
      * @param {string} uri: the Trace uri
      * @param {string} mode: the access mode ("r", "w" or "rw")
      * @param {string} requestmode: the HTTP method used for synchronization ("GET" or "POST")
-     * @param {string} format: the serialization format (see BufferedService)
-     * @param {boolean} handshake: see BufferedService
+     * @param {string} format: the serialization format (see {@link BufferedService})
+     * @param {boolean} handshake: see {@link BufferedService}
      */
     function Trace(uri, mode, requestmode, format, handshake) {
         /* FIXME: We could/should use a sorted list such as
@@ -372,10 +372,12 @@
 
         /** Load obsels from the Trace url
          * options is an object that contains optional parameters:
-         *  - page: the page number
-         *  - pagesize: the page size
-         *  - from: the minimum timestamp
-         *  - to: the maximum timestamp
+         *
+         * - page: the page number
+         * - pagesize: the page size
+         * - from: the minimum timestamp
+         * - to: the maximum timestamp
+         *
          * @param {object} options: optional parameters
          */
         load_obsels: function(options) {
@@ -425,7 +427,7 @@
          * @param {integer} _begin: the minimum begin time
          * @param {integer} _end: the maximum end time
          * @param {boolean} _reverse: return obsels in reverse chronological order
-         * @return {list} a list of {@links Obsel}
+         * @return {list} a list of {@link Obsel}
          */
         list_obsels: function(_begin, _end, _reverse) {
             var res;
@@ -490,7 +492,7 @@
         },
 
         /* (ident: id, type:ObselType, begin:int, end:int?, subject:str?, attributes:[AttributeType=>any]?) */
-        /** Create a new obsel and add it to the trace 
+        /** Create a new obsel and add it to the trace
          * @param {string} ident: the obsel id
          * @param {string} type: the obsel type
          * @param {integer} begin: the obsel begin time
@@ -532,7 +534,7 @@
             }
         },
 
-        /** Create a new obsel with the given attributes 
+        /** Create a new obsel with the given attributes
          * @param {string} type: the obsel type
          * @param {object} _attributes: the obsel attributes
          * @param {integer} [_begin]: the obsel begin time (current time if omitted)
@@ -633,7 +635,7 @@
             return true;
         },
 
-        /** Delete the obsel from the trace 
+        /** Delete the obsel from the trace
          * @throws Will throw an exception if it could not be removed.
          */
         remove: function() {
@@ -669,7 +671,7 @@
             return this.subject;
         },
 
-        /** List attribute types 
+        /** List attribute types
          */
         list_attribute_types: function() {
             var result = [];
@@ -862,7 +864,16 @@
          * The optional uri parameter allows to initialize the trace URI.
          * If another trace exists with the same name, then it is replaced by a new one.
          *
-         * See the {@link Trace} documentation for the definition of parameters.
+         * See the {@link Trace} documentation for the definition of parameters. They are:
+         *
+         * - url: the Trace url (for reading or writing)
+         * - mode: the access mode - "r", "w", "rw" (default)
+         * - requestmode: the HTTP method for creating obsels - "GET", "POST" (default)
+         * - syncmode: the synchronization mode - "delayed", "sync", "none" (default)
+         * - format: the serialization format - "json" (default), "json-compact", "turtle"
+         * - default_subject: the default subject id (default: "")
+         * - handshake: is an initial handshake needed (default: false)?
+         *
          * @param {string} name: the trace name
          * @param {object} params: the trace parameters
          */
@@ -875,6 +886,7 @@
             var format = params.format || "json";
             var default_subject = params.default_subject || "";
             var handshake = params.handshake;
+
             var t = new Trace(url, mode, requestmode, format, handshake);
             t.set_default_subject(default_subject);
             t.set_sync_mode(syncmode);

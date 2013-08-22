@@ -12,6 +12,19 @@ https://github.com/oaubert/nots/ or https://github.com/ktbs/ktbs/
 Usage
 -----
 
+The main entry point is the {@link tracemanager} singleton. It defines
+a {@link TraceManager#init_trace} method that creates a new trace and
+keeps a named reference to it.
+
+For writing, obsels can then be added to the new trace through the
+{@link Trace#trace} method.
+
+For reading, obsels can be accessed through the {@link Trace#obsels}
+property.
+
+Notes
+-----
+
 The handshake parameter indicates wether a "login" method should be
 called on the trace. Calling this method has 2 functions:
 
