@@ -223,7 +223,7 @@
         }
     };
 
-    var Trace = function(uri, requestmode, format, handshake) {
+    var Trace = function(uri, mode, requestmode, format, handshake) {
         /* FIXME: We could/should use a sorted list such as
            http://closure-library.googlecode.com/svn/docs/class_goog_structs_AvlTree.html
            to speed up queries based on time */
@@ -231,6 +231,9 @@
         /* Trace URI */
         if (uri === undefined)
             uri = "";
+        if (mode === undefined)
+            mode = "r";
+        this.mode = mode;
         this.uri = uri;
         this.sync_mode = "none";
         this.default_subject = "";
@@ -238,16 +241,20 @@
         /* baseuri is used a the base URI to resolve relative attribute names in obsels */
         this.baseuri = "";
 
-        this.syncservice = new BufferedService(uri, requestmode, format, handshake);
-        $(window).unload( function () {
-            if (this.syncservice && this.sync_mode !== 'none') {
-                this.syncservice.flush();
-                this.syncservice.stop_timer();
-            }
-        });
+        if (this.mode.indexOf("w") >= 0) {
+            this.syncservice = new BufferedService(uri, requestmode, format, handshake);
+            $(window).unload( function () {
+                if (this.syncservice && this.sync_mode !== 'none') {
+                    this.syncservice.flush();
+                    this.syncservice.stop_timer();
+                }
+            });
+        }
 
-        // Now that all is set up, we can try to load existing obsels.
-        this.load_obsels();
+        if (this.mode.indexOf("r") >= 0) {
+            // Now that all is set up, we can try to load existing obsels.
+            this.load_obsels();
+        }
     };
 
     Trace.prototype = {
@@ -257,6 +264,12 @@
         obsels: [],
         /* Trace URI */
         uri: "",
+        /* mode defined the intended usage mode of the trace. It can be either
+           "r" : read-only - we will only read existing obsels
+           "w" : write-only - we will only create obsels to be stored on a server
+           "rw" : read-write - we will both read and write obsels.
+        */
+        mode: "rw",
         default_subject: "",
         /* baseuri is used as the base URI to resolve relative
          * attribute-type names in obsels. Strictly speaking, this
@@ -747,16 +760,19 @@
          * The optional uri parameter allows to initialize the trace URI.
          *
          * If another existed with the same name before, then it is replaced by a new one.
+         *
+         * See the Trace documentation for the definition of parameters.
          */
         init_trace: function(name, params)
         {
             var url = params.url ? params.url : "";
+            var mode = params.mode || "rw";
             var requestmode = params.requestmode ? params.requestmode : "POST";
             var syncmode = params.syncmode ? params.syncmode : "none";
             var format = params.format || "json";
             var default_subject = params.default_subject || "";
             var handshake = params.handshake;
-            var t = new Trace(url, requestmode, format, handshake);
+            var t = new Trace(url, mode, requestmode, format, handshake);
             t.set_default_subject(default_subject);
             t.set_sync_mode(syncmode);
             this.traces[name] = t;
