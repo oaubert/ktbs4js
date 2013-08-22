@@ -158,7 +158,7 @@
         enqueue: function(obsel) {
             if (this.buffer.length > MAX_BUFFER_SIZE)
             {
-                obsel = new Obsel('ktbsFullBuffer', this.buffer[0].begin,
+                obsel = new Obsel(undefined, 'ktbsFullBuffer', this.buffer[0].begin,
                                   this.buffer[this.buffer.length - 1].end, this.buffer[0].subject);
                 obsel.trace = this.buffer[0].trace;
                 this.buffer = [];
@@ -273,7 +273,39 @@
         set_uri: function(uri) {
             this.uri = uri;
         },
+        get_uri: function() {
+            return this.uri;
+        },
 
+        get_id: function() {
+            var i = this.uri.split("/").reverse();
+            if (i[0] !== "")
+                return i[0];
+            else
+                return i[1];
+        },
+
+        // FIXME: to implement
+        get_readonly: function() {
+            return true;
+        },
+
+        remove: function() {
+            $.ajax({ url: this.uri,
+                     type: 'DELETE',
+                     async: false,
+                     error: function(jqXHR, textStatus, errorThrown) {
+                         throw "Cannot delete trace " + this.uri + ": " + textStatus + ' ' + JSON.stringify(errorThrown);
+                     }
+                   });
+            return true;
+        },
+
+        // FIXME: implement properly
+        get_label: function() {
+            return this.id;
+        },
+        
         /* Sync mode: delayed, sync (immediate sync), none (no
          * synchronisation with server, the trace has to be explicitly saved
          * if needed */
@@ -325,6 +357,10 @@
                          self.parseJSON(data);
                      }
                    });
+        },
+
+        force_state_refresh: function() {
+            this.load_obsels();
         },
 
         /*
@@ -386,10 +422,10 @@
             return this.default_subject;
         },
 
-        /* (type:ObselType, begin:int, end:int?, subject:str?, attributes:[AttributeType=>any]?) */
+        /* (ident: id, type:ObselType, begin:int, end:int?, subject:str?, attributes:[AttributeType=>any]?) */
         /* Create a new obsel and add it to the trace */
-        create_obsel: function(type, begin, end, subject, _attributes) {
-            var o = new Obsel(type, begin, end, subject);
+        create_obsel: function(ident, type, begin, end, subject, _attributes) {
+            var o = new Obsel(ident, type, begin, end, subject);
             if (typeof _attributes !== 'undefined') {
                 o.attributes = _attributes;
             }
@@ -436,19 +472,19 @@
             if (typeof _attributes === 'undefined') {
                 _attributes = {};
             }
-            return this.create_obsel(type, _begin, _end, _subject, _attributes);
+            return this.create_obsel(undefined, type, _begin, _end, _subject, _attributes);
         }
     };
 
-    var Obsel = function(type, begin, end, subject, attributes) {
+    var Obsel = function(ident, type, begin, end, subject, attributes) {
         this.trace = undefined;
         this.uri = "";
-        this.id = "";
+        this.id = ident || "";
         this.type = type;
         this.begin = begin;
         this.end = end;
         this.subject = subject;
-        /* Is the obsel synched with the server ? */
+        /* Is the obsel synced with the server ? */
         this.sync_status = false;
         /* Dictionary indexed by ObselType URIs */
         this.attributes = {};
@@ -466,6 +502,55 @@
         attributes: {},
 
         /* Method definitions */
+        get_uri: function() {
+            if (this.uri)
+                return this.uri;
+            else if (this.id && this.trace !== undefined)
+                return (this.trace.uri + this.id);
+            else
+                return "";
+        },
+
+        get_id: function() {
+            return this.id;
+        },
+
+        force_state_refresh: function() {
+            $.ajax({ url: this.uri,
+                     type: 'GET',
+                     // Type of the returned data.
+                     dataType: "json",
+                     error: function(jqXHR, textStatus, errorThrown) {
+                         logmsg("Cannot refresh obsel " + this.uri + ": ", textStatus + ' ' + JSON.stringify(errorThrown));
+                     },
+                     success: function(data, textStatus, jqXHR) {
+                         // Parse received data to populate this.obsels
+                         self.fromJSON(data);
+                     }
+                   });
+        },
+
+        // FIXME: to implement
+        get_readonly: function() {
+            return true;
+        },
+
+        remove: function() {
+            $.ajax({ url: this.uri,
+                     type: 'DELETE',
+                     async: false,
+                     error: function(jqXHR, textStatus, errorThrown) {
+                         throw "Cannot delete obsel " + this.uri + ": " + textStatus + ' ' + JSON.stringify(errorThrown);
+                     }
+                   });
+            return true;
+        },
+
+        // FIXME: implement properly
+        get_label: function() {
+            return this.id;
+        },
+        
         get_trace: function() {
             return this.trace;
         },
