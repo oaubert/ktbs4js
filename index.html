@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Ktbs4js by oaubert</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Ktbs4js</h1>
+        <p>Modelled traces API for javascript</p>
+        <p class="view"><a href="https://github.com/oaubert/ktbs4js">View the Project on GitHub <small>oaubert/ktbs4js</small></a></p>
+        <ul>
+          <li><a href="https://github.com/oaubert/ktbs4js/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/oaubert/ktbs4js/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/oaubert/ktbs4js">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="ktbs-api-for-javascript" class="anchor" href="#ktbs-api-for-javascript"><span class="octicon octicon-link"></span></a>KTBS API for JavaScript</h1>
+
+<p>API for storing and accessing modelled traces in JavaScript.</p>
+
+<p>It is based on the abstract client API defined in
+<a href="https://github.com/ktbs/ktbs/blob/master/doc/source/concepts/abstract_api.rst">https://github.com/ktbs/ktbs/blob/master/doc/source/concepts/abstract_api.rst</a></p>
+
+<p>It can be used standalone, or use a trace storage system such as
+<a href="https://github.com/oaubert/nots/">https://github.com/oaubert/nots/</a> or <a href="https://github.com/ktbs/ktbs/">https://github.com/ktbs/ktbs/</a></p>
+
+<h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>The main entry point is the <a href="api/tracemanager.html">tracemanager</a> singleton. It defines
+a <a href="api/TraceManager.html#init_trace">TraceManager#init_trace</a> method that creates a new trace and
+keeps a named reference to it.</p>
+
+<p>For writing, obsels can then be added to the new trace through the
+<a href="api/Trace.html#trace">Trace#trace</a> method.</p>
+
+<p>For reading, obsels can be accessed through the <a href="api/Trace.html#obsels">Trace#obsels</a>
+property.</p>
+      </section>
+    </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/oaubert">oaubert</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
