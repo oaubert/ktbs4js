@@ -3,3 +3,9 @@
 * Write better doc/README/tutorial
 * Integrate a timeline viz: https://github.com/almende/vis
  See also http://square.github.io/cubism/
+* Use https://github.com/dominictarr/JSONStream ?
+* Use a better data structure such as
+   https://github.com/toberndo/interval-query  or
+   https://github.com/shinout/interval-tree
+http://www.chasinclouds.com/2012/02/segment-tree-implementation-in.html
+
