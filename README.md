@@ -17,7 +17,8 @@ a {@link TraceManager#init_trace} method that creates a new trace and
 keeps a named reference to it.
 
 For writing, obsels can then be added to the new trace through the
-{@link Trace#trace} method.
+{@link Trace#trace} method. See the [example](src/example.js) file for an
+example.
 
 For reading, obsels can be accessed through the {@link Trace#obsels}
 property.
