@@ -4,12 +4,12 @@
 // @description I collect trace from every website, and send them to a kTBS server (http://liris.cnrs.fr/sbt-dev/ktbs)
 // @include     http://*
 // @exclude     http://localhost*
-// @version     1
+// @version     2013-09-13
 // @grant       none
-// @downloadURL https://raw.github.com/pchampin/ktbs4js/master/static/src/generic_collector.user.js
-// @updateURL   https://raw.github.com/pchampin/ktbs4js/master/static/src/generic_collector.user.js
-// @require     https://raw.github.com/pchampin/ktbs4js/master/static/src/jquery.js
-// @require     https://raw.github.com/pchampin/ktbs4js/master/static/src/tracemanager.js
+// @downloadURL https://raw.github.com/pchampin/ktbs4js/develop/src/generic_collector.user.js
+// @updateURL   https://raw.github.com/pchampin/ktbs4js/develop/src/generic_collector.user.js
+// @require     https://raw.github.com/pchampin/ktbs4js/develop/src/jquery.js
+// @require     https://raw.github.com/pchampin/ktbs4js/develop/src/tracemanager.js
 // ==/UserScript==
 
 /*jslint vars:true */
@@ -18,10 +18,14 @@
 "use strict";
 
 (function () {
+
+    // CHANGE THIS TO MATCH YOUR CONFIGURATION
     var TRACE_URI = "http://localhost:8001/b/t1/";
+    var SUBJECT = "pchampin";
+
     console.log("Generic collector started on " + TRACE_URI);
 
-    var $ = jQuery;
+    var $ = jQuery.noConflict(true);
     if (typeof($) !== "function") {
         alert("Generic collector problem: $ = " + $)
     }
@@ -29,8 +33,8 @@
     var tr = window.tracemanager.init_trace("test", {
         url: TRACE_URI,
         requestmode: 'POST', // alternatives: "GET", "POST"
-        syncmode: "delayed", // alternatives: "sync", "delayed", "none"
-        default_subject: "alice",
+        syncmode: "delayed", // alternatives: "sync", "delayed"
+        default_subject: SUBJECT,
         format: "turtle", // alternatives: "turtle", "json", "json-compact"
         handshake: false,
     });
@@ -98,7 +102,7 @@
         attributes.shift = e.shiftKey;
         attributes.target = getXPath(e.target);
         attributes.targetName = getElementName(e.target);
-        if (e.target.id) { attributes.targetId = e.target.text; }
+        if (e.target.id) { attributes.targetId = e.target.id; }
         if (e.target.text) { attributes.targetText = e.target.text; }
         if (e.currentTarget) {
             attributes.currentTarget = getXPath(e.currentTarget);

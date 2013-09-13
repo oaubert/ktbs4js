@@ -88,7 +88,8 @@
         /**
          * Flush buffer
          */
-        flush: function() {
+        flush: function(sync) {
+            if (typeof(sync) === "undefined") { sync = true; }
             // FIXME: add mutex on this.buffer
             if (! this.isReady)
             {
@@ -142,6 +143,7 @@
                              contentType: content_type,
                              data: data,
                              processData: false,
+                             async: !sync,
                              // Type of the returned data.
                              dataType: "text",
                              error: function(jqXHR, textStatus, errorThrown) {
@@ -830,7 +832,7 @@
             if (this.subject) { data.push("  :hasSubject \"" + this.subject + "\" ;"); }
             for (prop in this.attributes) {
                 if (this.attributes.hasOwnProperty(prop)) {
-                    data.push("  m:" + prop + " " + JSON.stringify(this.attributes[prop]));
+                    data.push("  m:" + prop + " " + JSON.stringify(this.attributes[prop]) + ";");
                 }
             }
             data.push("] .\n");
