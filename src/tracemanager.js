@@ -830,7 +830,7 @@
             if (this.subject) { data.push("  :hasSubject \"" + this.subject + "\" ;"); }
             for (prop in this.attributes) {
                 if (this.attributes.hasOwnProperty(prop)) {
-                    data.push("  m:" + prop + " " + JSON.stringify(this.attributes[prop]));
+                    data.push("  m:" + prop + " " + JSON.stringify(this.attributes[prop]) + ";");
                 }
             }
             data.push("] .\n");
