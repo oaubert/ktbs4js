@@ -296,7 +296,7 @@
 
         if (this.mode.indexOf("r") >= 0) {
             // Now that all is set up, we can try to load existing obsels.
-            this.load_obsels();
+            this.load_obsels({ 'async': false });
         }
     };
 
@@ -385,6 +385,7 @@
         load_obsels: function(options) {
             var self = this;
             var params = [];
+            var async = true;
 
             if (options !== undefined) {
                 if (options.page !== undefined)
@@ -396,17 +397,20 @@
                     params.push("from=" + options.from);
                 if (options.to !== undefined)
                     params.push("to=" + options.to);
+                if (options.async !== undefined)
+                    async = options.async;
             }
 
             $.ajax({ url: this.uri + "@obsels" + (params.length ? ("?" + params.join('&')) : ""),
                      type: 'GET',
                      // Type of the returned data.
                      dataType: "json",
+                     async: async,
                      statusCode: {
                          413: function(jqXHR, textStatus, errorThrown) {
                              // Entity request too large.
                              // Resend query with restriction
-                             self.load_obsels({ page: 1 });
+                             self.load_obsels({ page: 1, async: async });
                          }
                      },
                      error: function(jqXHR, textStatus, errorThrown) {
@@ -421,7 +425,8 @@
 
         /** Force trace refresh */
         force_state_refresh: function() {
-            this.load_obsels();
+            this.obsels = [];
+            this.load_obsels({ 'async': false });
         },
 
         /**
@@ -620,6 +625,7 @@
         force_state_refresh: function() {
             $.ajax({ url: this.uri,
                      type: 'GET',
+                     async: false,
                      // Type of the returned data.
                      dataType: "json",
                      error: function(jqXHR, textStatus, errorThrown) {
