@@ -534,7 +534,7 @@
                 var o;
                 data.obsels.forEach(function(j) {
                     o = (new Obsel()).fromJSON(j);
-                    o.trace = this;
+                    o.trace = self;
                     self.obsels.push(o);
                 });
                 $(this).trigger('updated');
