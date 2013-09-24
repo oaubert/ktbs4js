@@ -294,9 +294,12 @@
             });
         }
 
+        // set default URI for obsel list; will be overridden by fromJSON
+        this.obsel_list_uri = this.uri + "@obsels";
+
         if (this.mode.indexOf("r") >= 0) {
             // Now that all is set up, we can try to load existing obsels.
-            this.load_obsels({ 'async': false });
+            this.force_state_refresh();
         }
     };
 
@@ -327,6 +330,21 @@
         shorthands: null,
         syncservice: null,
 
+        model: null,
+        origin: null,
+        label: null,
+        obsel_list_uri: null,
+
+        fromJSON: function(j) {
+            this.model = j.hasModel;
+            this.origin = j.origin;
+            this.label = j.label;
+            if (typeof j.hasObselList !== "undefined") {
+                this.obsel_list_uri = j.hasObselList;
+            }
+            return this;
+        },
+
         /** Define the trace URI */
         set_uri: function(uri) {
             this.uri = uri;
@@ -343,6 +361,14 @@
                 return i[0];
             else
                 return i[1];
+        },
+
+        get_model: function() {
+            return this.model;
+        },
+
+        get_origin: function() {
+            return this.origin;
         },
 
         /** Indicates wether the trace can be written to */
@@ -425,6 +451,20 @@
 
         /** Force trace refresh */
         force_state_refresh: function() {
+            var self = this;
+            $.ajax({ url: this.uri,
+                     type: 'GET',
+                     async: false,
+                     // Type of the returned data.
+                     dataType: "json",
+                     error: function(jqXHR, textStatus, errorThrown) {
+                         logmsg("Cannot refresh trace " + this.uri + ": ", textStatus + ' ' + JSON.stringify(errorThrown));
+                     },
+                     success: function(data, textStatus, jqXHR) {
+                         // Parse received data to populate this.obsels
+                         self.fromJSON(data);
+                     }
+                   });
             this.obsels = [];
             this.load_obsels({ 'async': false });
         },
