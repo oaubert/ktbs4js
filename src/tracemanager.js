@@ -446,7 +446,7 @@
                 var l = this.obsels.length;
                 for (var i = 0; i < l; i++) {
                     var o = this.obsels[i];
-                    if ((typeof _begin !== 'undefined' && o.begin > _begin) && (typeof _end !== 'undefined' && o.end < _end)) {
+                    if ((typeof _begin === 'undefined' || o.begin > _begin) && (typeof _end === 'undefined' || o.end < _end)) {
                         res.push(o);
                     }
                 }
