@@ -124,6 +124,9 @@
                 attributes.originalTargetText = e.explicitOriginalTarget.text;
             }
         }
+        if (e.target.tagName === "IMG") {
+            attributes.imgSrc = e.target.src;
+        }
     }
 
 
