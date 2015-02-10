@@ -436,7 +436,7 @@
                          413: function(jqXHR, textStatus, errorThrown) {
                              // Entity request too large.
                              // Resend query with restriction
-                             self.load_obsels({ page: 1, async: async });
+                             self.load_obsels({ page: -1, async: async });
                          }
                      },
                      error: function(jqXHR, textStatus, errorThrown) {
